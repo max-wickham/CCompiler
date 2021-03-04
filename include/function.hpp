@@ -12,9 +12,10 @@ class Function: public Node{
     Type *type;
     std::string id;
     Statement *statement;
-    Parameter *firstParameter;
+    ParameterDefinition *firstParameter;
     public:
-    Function(const Type *type, const std::string& id, Statement* statement, Parameter firstParameter);
+    Function(const Type *type, const std::string& id, Statement* statement,
+        ParameterDefinition firstParameter);
 };
 
 #endif

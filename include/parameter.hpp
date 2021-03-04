@@ -3,11 +3,23 @@
 
 #include "node.hpp"
 #include "type.hpp"
+#include "expression.hpp"
+#include "decleration.hpp"
+
+class ParameterDefinition: public Node{
+    protected:
+    Decleration *decleration;
+    ParameterDefinition *parameterNext;
+    public:
+    ParameterDefinition(Decleration *decleration, ParameterDefinition *parameterNext = nullptr);
+};
 
 class Parameter: public Node{
     protected:
-    Type *type;
+    Expression *expression;
     Parameter *parameterNext;
+    public:
+    Parameter(Expression *expression, Parameter *parameterNext = nullptr);
 };
 
 #endif
