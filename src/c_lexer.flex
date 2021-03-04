@@ -19,12 +19,25 @@ extern "C" int fileno(FILE *stream);
 
 
 %%
-[0-9]+ {
-   yylval.numberValue = std::stod(yytext);
-   return T_NUMBER;
-}
+"if"     {return IF;}
+"else"   {return ELSE;}
+"while"  {return WHILE;}
+"int"    {return INT;}
+"bool"   {return BOOL;}
+"return" {return RETURN;} 
 
-\+    {return T_PLUS;}
+-?([0-9]+\.?[0-9]*)   {yylval.numberValue = std::stod(yytext); return NUMBER;}
+
+
+[a-zA-Z_]?\"(\\.|[^\\"])*\"  {yylval.wordValue = new std::string(yytext);
+                              *yylval.wordValue = (*yylval.wordValue).substr(1,(*yylval.wordValue).size()-2);
+                              return STRING;}
+
+"+"      {return PLUS;}
+"-"      {return MINUS;}
+"*"      {return MULTIPLY;}
+"/"      {return DIVIDE;}
+","      {return COMMA;}
 
 .     {fprintf(stderr, "%s\n",yytext); }
 

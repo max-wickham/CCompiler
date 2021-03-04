@@ -6,9 +6,40 @@
 enum TokenType{
     NONE,
     YYEOF, // This indicates there are no more tokens
-    T_PLUS,
-    T_EQUALS,
-    T_NUMBER
+    //arithmatic
+    PLUS,
+    MINUS,
+    MULTIPLY,
+    DIVIDE,
+    //comparators
+    EQUALS,
+    //boolean
+    BIT_AND,
+    BIT_OR,
+    AND,
+    OR,
+    //constants
+    NUMBER,
+    STRING,
+    //brackets
+    LEFT_BRACKET,
+    RIGHT_BRACKET,
+    LEFT_CURLY,
+    RIGHT_CURLY,
+    LEFT_SQUARE,
+    RIGHT_SQUARE,
+    //misc
+    COMMA,
+    //types
+    VOID,
+    INT,
+    BOOL,
+    //logic
+    IF,
+    ELSE,
+    WHILE,
+    RETURN
+
 };
 
 union TokenValue{

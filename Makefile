@@ -2,7 +2,11 @@
 CPPFLAGS += -std=c++17 -W -Wall -g -Wno-unused-parameter
 CPPFLAGS += -I inc
 
-bin/c_lexer.yy.cpp : src/c_lexer.flex
+
+bin/test.o : src/main.cpp src/c.hpp src/c_lexer.yy.cpp
+	g++ src/main.cpp src/c.hpp src/c_lexer.yy.cpp -o bin/test.exe
+
+src/c_lexer.yy.cpp : src/c_lexer.flex
 	flex -o src/c_lexer.yy.cpp src/c_lexer.flex
 
 bin/c_compiler : bin/compiler src/wrapper.sh
