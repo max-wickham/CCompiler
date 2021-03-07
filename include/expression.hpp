@@ -6,6 +6,7 @@
 
 class Expression: public Node{
     public:
+    virtual void printASM(Bindings *bindings) const = 0;
     virtual void printASM(Bindings *bindings, std::string returnRegister) const = 0;
 };
 
@@ -79,6 +80,7 @@ class DivisionOperator: public BinaryOperatorExpression{
 
 class EqualityOperator: public BinaryOperatorExpression{
     public:
+    void printASM(Bindings *bindings, std::string returnRegister);
     void printASM(Bindings *bindings, std::string returnRegister);
 };
 

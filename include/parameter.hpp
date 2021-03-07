@@ -12,7 +12,8 @@ class ParameterDefinition: public Node{
     ParameterDefinition *parameterNext;
     public:
     ParameterDefinition(Decleration *decleration, ParameterDefinition *parameterNext = nullptr);
-    void printASM(Bindings *bindings);
+    //add the parameters names, which should already be on the stack into the current scope
+    void createScope(Bindings *bindings);
 };
 
 class Parameter: public Node{

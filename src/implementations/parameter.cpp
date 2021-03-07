@@ -5,6 +5,10 @@ ParameterDefinition::ParameterDefinition(Decleration *decleration, ParameterDefi
     this->parameterNext = parameterNext;
 }
 
-void ParameterDefinition::printASM(Bindings *bindings){
-
+void ParameterDefinition::createScope(Bindings *bindings){
+    //set the memory positions of the parameters in the bindings
+    bindings->addVariable(decleration);
+    if(parameterNext != nullptr){
+        parameterNext->createScope(bindings);
+    }
 }
