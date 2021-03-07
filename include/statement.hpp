@@ -7,12 +7,17 @@
 class Statement: public Node{
     protected:
     Statement *nextStatement;
+    public:
+    virtual void printASM(Bindings* bindings) const = 0;
 };
 
-class FunctionCallStatement: public Statement{
+class VariableDefinition: public Statement{
     protected:
+    Type *type;
     std::string id;
-    Parameter *parameter;
+    Expression *expression;
+    public:
+    VariableDefinition(Type *type, std::string id, Expression *expression = nullptr);
 };
 
 class ReturnStatement: public Statement{
@@ -45,6 +50,10 @@ class ForLoopStatement: public Statement{
 
 };
 
+class ExpressionStatement: public Statement{
+    protected:
+    Expression *expression;
+};
 
 
 #endif

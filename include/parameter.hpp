@@ -12,6 +12,7 @@ class ParameterDefinition: public Node{
     ParameterDefinition *parameterNext;
     public:
     ParameterDefinition(Decleration *decleration, ParameterDefinition *parameterNext = nullptr);
+    void printASM(Bindings *bindings);
 };
 
 class Parameter: public Node{

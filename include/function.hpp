@@ -5,6 +5,7 @@
 #include "type.hpp"
 #include "statement.hpp"
 #include "parameter.hpp"
+#include "bindings.hpp"
 #include <string>
 
 class Function: public Node{
@@ -14,8 +15,9 @@ class Function: public Node{
     Statement *statement;
     ParameterDefinition *firstParameter;
     public:
-    Function(const Type *type, const std::string& id, Statement* statement,
-        ParameterDefinition firstParameter);
+    Function(Type *type, std::string& id, Statement* statement,
+        ParameterDefinition *firstParameter = nullptr);
+    void printASM(Bindings *bindings);
 };
 
 #endif
