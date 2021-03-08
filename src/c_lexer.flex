@@ -53,17 +53,52 @@ ALL .
 (continue)	{ return T_continue; }
 (break)		{ return T_break; }
 (goto)		{ return T_goto; }
-(case)		{ return T_case; }
 (default)	{ return T_default; }
 (switch)	   { return T_switch; }
+(case)		{ return T_case; }
+
 
    /* Here should be string and char constants */
 
+{STRINGLITERAL}	{ std::string tmp(yytext); yylval.string = new std::string(tmp.substr(1, yyleng-2));
+		  return T_stringliteral; }
 
+{CHARCONSTANT} { yylval.number = yytext[1]; return T_INT_CONST; }
 
 
    /*Here should be the operators*/
 
+[.][.][.]	{ return T_ellipsis; }
+[;]		{ return T_sc; }
+[,]		{ return T_cma; }
+[(]		{ return T_lrb; }
+[)]		{ return T_rrb; }
+[{]             { return T_lcb; }
+[}]             { return T_rcb; }
+[[]		{ return T_lsb; }
+[]]		{ return T_rsb; }
+[=]		{ yylval.string = new std::string(yytext); return T_equal; }
+{ASSIGNMENT_OPERATOR} { yylval.string = new std::string(yytext); return T_assignment_op; }
+[?]		{ return T_qm; }
+[:]		{ return T_colon; }
+[|][|]		{ return T_logical_or; }
+[&][&]		{ return T_logical_and; }
+[|]		{ return T_or; }
+[\^]		{ return T_xor; }
+[&]		{ yylval.string = new std::string(yytext); return T_and; }
+[=][=]		{ yylval.string = new std::string(yytext); return T_logical_equality; }
+[!][=]		{ yylval.string = new std::string(yytext); return T_logical_inquality; }
+([<>][=])|[<>]	{ yylval.string = new std::string(yytext); return T_rel_op; }  
+[<>][<>]	{ yylval.string = new std::string(yytext); return T_shift; }
+[*] 		{ yylval.string = new std::string(yytext); return T_mutl; }
+[\/]		{ yylval.string = new std::string(yytext); return T_div; }
+[%]		{ yylval.string = new std::string(yytext); return T_rem; }
+[~]		{ yylval.string = new std::string(yytext); return T_tilde; }
+[!]		{ yylval.string = new std::string(yytext); return T_not; }
+[.]		{ return T_dot; }
+[-][>]		{ return T_arrow; }
+[+-][+-]	{ yylval.string = new std::string(yytext); return T_inc_dec; }
+[+-]		{ yylval.string = new std::string(yytext); return T_addsub_OP; }
 
 
        
