@@ -19,15 +19,19 @@ int main()
         if(type==NONE){
             break; // No more tokens
 
-        }else if(type==T_NUMBER){
+        }else if(type==NUMBER){
             // We have a number. The value will be
             // in yylval.numberValue
 
             // TODO: add to sum
             sum += yylval.numberValue;
             std::cout << "number" << std::endl;
-        }else if(type==T_PLUS){
+        }else if(type==PLUS){
             std::cout << "plus" << std::endl;
+        }else if(type==IF){
+            std::cout << "IF" << std::endl;
+        }else if(type==STRING){
+            std::cout << "STRING " << *yylval.wordValue << std::endl;
         }else{
             assert(0); // There are only three token types.
             return 1;
