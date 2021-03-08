@@ -10,6 +10,13 @@
 WhileLoopStatement::WhileLoopStatement(Expression *condition, Statement *statement){
     this->condition = condition;
     this->statement = statement;
+}
+
+void WhileLoopStatement::printASM(Bindings* bindings){
+    std::string endLabel = bindings->createLabel("end");
+    std::string beginLabel = bindings->createLabel("begin");
+    bindings->setBreak(endLabel);
+    bindings->setContinue(beginLabel);
     std::cout << beginLabel << ":";
     //check that the condition is true
     condition->printASM(bindings,"$t0");
@@ -27,11 +34,6 @@ WhileLoopStatement::WhileLoopStatement(Expression *condition, Statement *stateme
     }
 }
 
-void WhileLoopStatement::printASM(Bindings* bindings){
-    std::string endLabel = bindings->createLabel("end");
-    std::string beginLabel = bindings->createLabel("begin");
-}
-
 ForLoopStatement::ForLoopStatement(Decleration *definition, Expression *condition, Expression *incrementer,
         Statement *statement){
     this->definition = definition;
@@ -43,6 +45,8 @@ ForLoopStatement::ForLoopStatement(Decleration *definition, Expression *conditio
 void ForLoopStatement::printASM(Bindings* bindings){
     std::string endLabel = bindings->createLabel("end");
     std::string beginLabel = bindings->createLabel("begin");
+    bindings->setBreak(end);
+    bindings->setContinue(begin);
     //firstly create the definded varaible
     bindings->addVariable(decleration);
     std::cout << beginLabel << ":";

@@ -6,7 +6,7 @@
 
 class Expression: public Node{
     public:
-    virtual void printASM(Bindings *bindings) const = 0;
+    virtual void printASM(Bindings *bindings, std::string returnVariable) const = 0;
     virtual void printASM(Bindings *bindings, std::string returnRegister) const = 0;
 };
 
@@ -15,6 +15,8 @@ class FunctionCall: public Expression{
     std::string id;
     Parameter *parameter;
     public:
+    FunctionCall(std::string id,Parameter *parameter = nullptr);
+    void printASM(Bindings *bindings, std::string returnVariable);
     void printASM(Bindings *bindings, std::string returnRegister);
 };
 

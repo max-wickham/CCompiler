@@ -13,7 +13,7 @@ class ParameterDefinition: public Node{
     public:
     ParameterDefinition(Decleration *decleration, ParameterDefinition *parameterNext = nullptr);
     //add the parameters names, which should already be on the stack into the current scope
-    void createScope(Bindings *bindings);
+    void createScope(Bindings *bindings, ReturnRegisters &returnRegisters);
 };
 
 class Parameter: public Node{
@@ -22,6 +22,7 @@ class Parameter: public Node{
     Parameter *parameterNext;
     public:
     Parameter(Expression *expression, Parameter *parameterNext = nullptr);
+    void placeOnStack(Bindings *bindings);
 };
 
 #endif
