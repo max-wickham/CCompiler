@@ -14,11 +14,9 @@ class Statement: public Node{
 
 class VariableDefinition: public Statement{
     protected:
-    Type *type;
-    std::string id;
-    Expression *expression;
+    Decleration *decleration;
     public:
-    VariableDefinition(Type *type, std::string id, Expression *expression = nullptr);
+    VariableDefinition(Decleration *decleration);
     void printASM(Bindings* bindings);
 };
 
