@@ -70,7 +70,7 @@ ALL .
 
 [.][.][.]	{ return T_ellipsis; }
 [;]		{ return T_sc; }
-[,]		{ return T_cma; }
+[,]		{ return T_comma; }
 [(]		{ return T_lrb; }
 [)]		{ return T_rrb; }
 [{]             { return T_lcb; }
