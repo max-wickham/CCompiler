@@ -30,9 +30,11 @@ void yyerror(const char *);
 %token 
  /* Precendents is very important here!*/
 
-T_identifier T_sc T_lcb T_rcb T_lrb T_rrb
+T_identifier T_sc T_lcb T_rcb T_lrb
 T_return T_int_const 
 T_int 
+
+%nonassoc		T_rrb
 
 %type <top> TOP
 %type <number> T_int_const
