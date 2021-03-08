@@ -8,23 +8,30 @@ FunctionCall::FunctionCall(std::string id, Parameter *parameter = nullptr){
     this->parameter = parameter;
 }
 
-void FunctionCall::printASM(Bindings *bindings, std::string returnVariable){
-    //first put the parameters into memory in order,
+void FunctionCall::printASM(Bindings *bindings){
+    //first put the parameters into memory in order
+    std::string params = "";
     if(parameter != nullptr){
-        
+        //create the label string needed to find where to jump to
+        parameter->createLabel(params);
+        //calculate the total needed memory
+        int mem = 0;
+        parameter->calculateTotalMem(mem);
+        //place the parameters on the stack
+        parameter->placeOnStack(bindings, mem);
+        //set the new bindings offset
+        bindings->setOffset(bindings->currentOffset() + mem);
     }
-    //then set the return jump label
+    //set the sp to the current bindings offset
+    int upper = (bindings->currentOffset() && 4294901760) >> 16;
+    int lower = (bindings->currentOffset() && 65535);
+    std::cout << "lui    $sp," << upper << std::endl;
+    std::cout << "addi    $sp," << lower << std::endl;
     //then jump to the function code
-    //then place the return value in the return variable
-}
-
-void FunctionCall::printASM(Bindings *bindings, std::string returnRegister){
-    //first put the parameters into memory in order,
+    std::cout << "j     " << id << "(" << params << ")";
     //then set the return jump label
-    //then jump to the function code
-    //then place the value in the return register
+    std::cout << bindings->createLabel("functionReturn") << ":";
 }
-
 
 Variable::Variable(std::string id){
     this->id = id;

@@ -14,6 +14,7 @@ protected:
 public:
 	virtual std::string getId() const = 0;
 	virtual void loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings) const = 0;
+	virtual void evaluateReturn(Bindings *bindings) const = 0;
     
 	virtual Type type() = 0;
 	virtual int getSize(int arraySize);
@@ -28,6 +29,7 @@ public:
 	Int();
 	int getSize(int arraySize);
 	void loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings);
+	void evaluateReturn(Bindings *bindings);
 };
 
 struct ReturnRegisters{

@@ -24,6 +24,7 @@ class Bindings{
     std::map<std::string, BindingData> bindings;
     public:
     Bindings(int begin_offset);
+    void setOffset(int offset);
     int currentOffset();
     int stackPosition(std::string id);
     void addVariable(Decleration *decleration);

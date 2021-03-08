@@ -24,6 +24,7 @@ class ReturnStatement: public Statement{
     protected:
     Expression *expression;
     public:
+    ReturnStatement(Expression *expression);
     void printASM(Bindings* bindings);
 };
 
