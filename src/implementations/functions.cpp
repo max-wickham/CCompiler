@@ -16,23 +16,24 @@ Function::Function(Type *type, std::string& id, Statement* statement,
 }
 
 void Function::printASM(Bindings *bindings){
+    bindings->addFunction(id, type);
     //print the current label
-    std::cout << id << "(" << type->getId() << "):";
+    std::cout << id << "(" << type->getName() << "):";
     //store the current frame pointer in +4
     std::cout << "sw      $fp,-4($sp)" << std::endl;
     //store the current return address in +8
     std::cout << "sw      $ra,-8($sp)" << std::endl;
     //save the registers
-    std::cout << "sw      $s0,-12($sp)" << std::endl;
-    std::cout << "sw      $s1,-16($sp)" << std::endl;
-    std::cout << "sw      $s2,-20($sp)" << std::endl;
-    std::cout << "sw      $s3,-24($sp)" << std::endl;
-    std::cout << "sw      $s4,-28($sp)" << std::endl;
-    std::cout << "sw      $s5,-32($sp)" << std::endl;
-    std::cout << "sw      $s6,-36($sp)" << std::endl;
-    std::cout << "sw      $s7,-40($sp)" << std::endl;
+    // std::cout << "sw      $s0,-12($sp)" << std::endl;
+    // std::cout << "sw      $s1,-16($sp)" << std::endl;
+    // std::cout << "sw      $s2,-20($sp)" << std::endl;
+    // std::cout << "sw      $s3,-24($sp)" << std::endl;
+    // std::cout << "sw      $s4,-28($sp)" << std::endl;
+    // std::cout << "sw      $s5,-32($sp)" << std::endl;
+    // std::cout << "sw      $s6,-36($sp)" << std::endl;
+    // std::cout << "sw      $s7,-40($sp)" << std::endl;
     //set the current offset to + 44
-    bindings->setOffset(44);
+    bindings->setOffset(-8);
     //load the parameters into memory 
     ReturnRegisters returnRegisters;
     firstParameter->createScope(bindings,returnRegisters);

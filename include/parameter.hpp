@@ -26,7 +26,7 @@ class Parameter: public Node{
     Parameter(Expression *expression, Parameter *parameterNext = nullptr);
     void calculateTotalMem(int &total);
     void placeOnStack(Bindings *bindings, int &totalMem);
-    void createLabel(std::string &label);
+    void createLabel(std::string &label, Bindings *bindings);
 };
 
 #endif

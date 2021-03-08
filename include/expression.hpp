@@ -7,10 +7,10 @@
 
 class Expression: public Node{
     public:
-    virtual void printASM(Bindings *bindings) const = 0;
-    virtual void printASM(Bindings *bindings, std::string returnVariable) const = 0;
-    virtual void printASM(Bindings *bindings, std::string returnRegister) const = 0;
-    virtual Type* getType() const = 0;
+    virtual void printASM(Bindings *bindings) = 0;
+    //virtual void printASM(Bindings *bindings, std::string returnVariable) = 0;
+    //virtual void printASM(Bindings *bindings, std::string returnRegister) = 0;
+    virtual Type*  getType(Bindings *bindings) = 0;
 };
 
 class FunctionCall: public Expression{
@@ -20,8 +20,8 @@ class FunctionCall: public Expression{
     public:
     FunctionCall(std::string id,Parameter *parameter = nullptr);
     void printASM(Bindings *bindings);
-    void printASM(Bindings *bindings, std::string returnVariable);
-    void printASM(Bindings *bindings, std::string returnRegister);
+    //void printASM(Bindings *bindings, std::string returnVariable);
+    //void printASM(Bindings *bindings, std::string returnRegister);
 };
 
 class Variable: public Expression{
@@ -29,7 +29,8 @@ class Variable: public Expression{
     std::string id;
     public:
     Variable(std::string id);
-    void printASM(Bindings *bindings, std::string returnRegister);
+    void printASM(Bindings *bindings) override;
+    Type*  getType(Bindings *bindings) override;
 };
 
 class StringConstant: public Expression{
@@ -45,7 +46,8 @@ class NumberConstant: public Expression{
     int value;
     public:
     NumberConstant(int value);
-    void printASM(Bindings *bindings, std::string returnRegister);
+    void printASM(Bindings *bindings) override;
+    Type*  getType(Bindings *bindings) override;
 };
 
 class BinaryOperatorExpression: public Expression{
@@ -61,17 +63,23 @@ class BinaryOperatorExpression: public Expression{
 
 class AssignmentOperator: public BinaryOperatorExpression{
     public:
+    using BinaryOperatorExpression::BinaryOperatorExpression;
+    void printASM(Bindings *bindings) override;
+    Type*  getType(Bindings *bindings) override
     void printASM(Bindings *bindings, std::string returnRegister);
 };
 
 class AdditionOperator: public BinaryOperatorExpression{
     public:
-    void printASM(Bindings *bindings);
-    void printASM(Bindings *bindings, std::string returnRegister);
+    using BinaryOperatorExpression::BinaryOperatorExpression;
+    void printASM(Bindings *bindings) override;
+    //void printASM(Bindings *bindings, std::string returnRegister);
+    Type*  getType(Bindings *bindings) override;
 };
 
 class SubtractionOperator: public BinaryOperatorExpression{
     public:
+    void printASM(Bindings *bindings) override;
     void printASM(Bindings *bindings, std::string returnRegister);
 };
 

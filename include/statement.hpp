@@ -9,23 +9,23 @@ class Statement: public Node{
     protected:
     Statement *nextStatement;
     public:
-    virtual void printASM(Bindings* bindings) const = 0;
+    virtual void printASM(Bindings* bindings) = 0;
 };
 
 class VariableDefinition: public Statement{
     protected:
     Decleration *decleration;
     public:
-    VariableDefinition(Decleration *decleration);
-    void printASM(Bindings* bindings);
+    VariableDefinition(Decleration *decleration, Statement *nextStatement = nullptr);
+    void printASM(Bindings* bindings) override;
 };
 
 class ReturnStatement: public Statement{
     protected:
     Expression *expression;
     public:
-    ReturnStatement(Expression *expression);
-    void printASM(Bindings* bindings);
+    ReturnStatement(Expression *expression, Statement *nextStatement = nullptr);
+    void printASM(Bindings* bindings) override;
 };
 
 class IfElseStatement: public Statement{
@@ -35,21 +35,23 @@ class IfElseStatement: public Statement{
     Statement *elseStatement;
 
     public:
-    IfElseStatement(Expression *condition, Statement *ifStatement, Statement *elseStatement = nullptr);
+    IfElseStatement(Expression *condition, Statement *ifStatement, Statement *elseStatement,
+    ,Statement *nextStatement = nullptr);
     void printASM(Bindings* bindings);
 };
 
 class ForLoopStatement: public Statement{
     protected:
     Decleration *definition;
+    Expression *initialiser;
     Expression *condition;
     Expression *incrementer;
     Statement *statement;
 
     public:
-    ForLoopStatement(Decleration *definition, Expression *condition, Expression *incrementer,
-        Statement *statement);
-    void printASM(Bindings* bindings);
+    ForLoopStatement(Decleration *definition, Expression *initialiser, Expression *condition, Expression *incrementer,
+        Statement *statement, Statement *nextStatement = nullptr);
+    void printASM(Bindings* bindings) override;
 
 };
 
@@ -57,15 +59,16 @@ class WhileLoopStatement: public Statement{
     protected:
     Expression *condition;
     Statement *statement;
-    WhileLoopStatement(Expression *condition, Statement *statement);
-    void printASM(Bindings* bindings);
+    WhileLoopStatement(Expression *condition, Statement *statement, Statement *nextStatement = nullptr);
+    void printASM(Bindings* bindings) override;
 };
 
 class ExpressionStatement: public Statement{
     protected:
     Expression *expression;
+    public:
     ExpressionStatement(Expression *expression, Statement *nextStatement = nullptr);
-    void printASM(Bindings* bindings);
+    void printASM(Bindings* bindings) override;
 };
 
 
