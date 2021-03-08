@@ -6,6 +6,32 @@
 
 #include "statement.hpp"
 
+ReturnStatement::ReturnStatement(Expression *expression){
+    this->expression = expression;
+}
+
+void ReturnStatement::printASM(Bindings* bindings){
+    //the expression needs to be evaluated,
+    expression->printASM(bindings);
+    //the expression needs to be placed in the return register or in the return memory space dependent on the type
+    expression->getType()->evaluateReturn(bindings);
+    //the save registers need to be loaded back
+    std::cout << "sw      $s0,-12($fp)" << std::endl;
+    std::cout << "sw      $s1,-16($fp)" << std::endl;
+    std::cout << "sw      $s2,-20($fp)" << std::endl;
+    std::cout << "sw      $s3,-24($fp)" << std::endl;
+    std::cout << "sw      $s4,-28($fp)" << std::endl;
+    std::cout << "sw      $s5,-32($fp)" << std::endl;
+    std::cout << "sw      $s6,-36($fp)" << std::endl;
+    std::cout << "sw      $s7,-40($fp)" << std::endl;
+    //the return register needs to be loaded back 
+    std::cout << "sw      $ra,-8($fp)" << std::endl;
+    //the frame and stack pointer need to be reset
+    std::cout << "move    $sp,$fp" << std::endl;
+    std::cout << "lw      $fp,-4($fp)" << std::endl;
+    //the load register needs to be jumped to
+    stdd::cout << "jr     $ra" << std::endl;
+}
 
 WhileLoopStatement::WhileLoopStatement(Expression *condition, Statement *statement){
     this->condition = condition;

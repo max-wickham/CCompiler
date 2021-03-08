@@ -4,4 +4,3 @@
 - Save the current return address at -8
 - Load each of the current vaiables into the stack
 - Make the f
-- 

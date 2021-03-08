@@ -9,6 +9,7 @@ void ParameterDefinition::createScope(Bindings *bindings, ReturnRegisters &retur
     //print the asm and load into the bindings the variable
     decleration->type->loadParameter(returnRegisters, bindings);
     //add the variable to the bindings
+    bindings->addVariable(decleration);
     if(parameterNext != nullptr){
         parameterNext->createScope(bindings, returnRegisters);
     }

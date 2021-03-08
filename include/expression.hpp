@@ -3,11 +3,14 @@
 
 #include "node.hpp"
 #include "bindings.hpp"
+#include "type.hpp"
 
 class Expression: public Node{
     public:
+    virtual void printASM(Bindings *bindings) const = 0;
     virtual void printASM(Bindings *bindings, std::string returnVariable) const = 0;
     virtual void printASM(Bindings *bindings, std::string returnRegister) const = 0;
+    virtual Type* getType() const = 0;
 };
 
 class FunctionCall: public Expression{
@@ -16,6 +19,7 @@ class FunctionCall: public Expression{
     Parameter *parameter;
     public:
     FunctionCall(std::string id,Parameter *parameter = nullptr);
+    void printASM(Bindings *bindings);
     void printASM(Bindings *bindings, std::string returnVariable);
     void printASM(Bindings *bindings, std::string returnRegister);
 };
@@ -62,6 +66,7 @@ class AssignmentOperator: public BinaryOperatorExpression{
 
 class AdditionOperator: public BinaryOperatorExpression{
     public:
+    void printASM(Bindings *bindings);
     void printASM(Bindings *bindings, std::string returnRegister);
 };
 

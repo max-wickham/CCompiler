@@ -6,6 +6,8 @@
 #include "expression.hpp"
 #include "decleration.hpp"
 
+#include <string>
+
 class ParameterDefinition: public Node{
     protected:
     Decleration *decleration;
@@ -22,7 +24,9 @@ class Parameter: public Node{
     Parameter *parameterNext;
     public:
     Parameter(Expression *expression, Parameter *parameterNext = nullptr);
-    void placeOnStack(Bindings *bindings);
+    void calculateTotalMem(int &total);
+    void placeOnStack(Bindings *bindings, int &totalMem);
+    void createLabel(std::string &label);
 };
 
 #endif
