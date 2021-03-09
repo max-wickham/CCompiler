@@ -8,7 +8,7 @@
 #include <iostream>
 
 Function::Function(Type *type, std::string& id, Statement* statement,
-        ParameterDefinition *firstParameter = nullptr){
+        ParameterDefinition *firstParameter){
             this->type = type;
             this->id = id;
             this->statement = statement;
@@ -36,7 +36,9 @@ void Function::printASM(Bindings *bindings){
     bindings->setOffset(-8);
     //load the parameters into memory 
     ReturnRegisters returnRegisters;
-    firstParameter->createScope(bindings,returnRegisters);
+    if(firstParameter != nullptr){
+        firstParameter->createScope(bindings,returnRegisters);
+    }
     //make the frame pointer equal to the stack pointer to begin a new frame
     std::cout << "move    $fp,$sp" << std::endl;
     //increase the bindings offset 
@@ -52,7 +54,6 @@ void Function::printASM(Bindings *bindings){
     //add the function to the current scope
     //load the variables into the bindings, 
     //each parameter should set its current stack position in the bindings
-    firstParameter->createScope(bindings);
     //then print the asm of the statement
     
 }

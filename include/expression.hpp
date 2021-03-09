@@ -2,8 +2,9 @@
 #define EXPRESSION_HPP
 
 #include "node.hpp"
-#include "bindings.hpp"
+class Bindings;
 #include "type.hpp"
+class Parameter;
 
 class Expression: public Node{
     public:
@@ -18,7 +19,7 @@ class FunctionCall: public Expression{
     std::string id;
     Parameter *parameter;
     public:
-    FunctionCall(std::string id,Parameter *parameter = nullptr);
+    FunctionCall(std::string id,Parameter *parameter);
     void printASM(Bindings *bindings);
     //void printASM(Bindings *bindings, std::string returnVariable);
     //void printASM(Bindings *bindings, std::string returnRegister);
@@ -31,6 +32,7 @@ class Variable: public Expression{
     Variable(std::string id);
     void printASM(Bindings *bindings) override;
     Type*  getType(Bindings *bindings) override;
+    std::string getName();
 };
 
 class StringConstant: public Expression{
@@ -65,8 +67,7 @@ class AssignmentOperator: public BinaryOperatorExpression{
     public:
     using BinaryOperatorExpression::BinaryOperatorExpression;
     void printASM(Bindings *bindings) override;
-    Type*  getType(Bindings *bindings) override
-    void printASM(Bindings *bindings, std::string returnRegister);
+    Type*  getType(Bindings *bindings) override;
 };
 
 class AdditionOperator: public BinaryOperatorExpression{
@@ -74,7 +75,7 @@ class AdditionOperator: public BinaryOperatorExpression{
     using BinaryOperatorExpression::BinaryOperatorExpression;
     void printASM(Bindings *bindings) override;
     //void printASM(Bindings *bindings, std::string returnRegister);
-    Type*  getType(Bindings *bindings) override;
+    Type* getType(Bindings *bindings) override;
 };
 
 class SubtractionOperator: public BinaryOperatorExpression{
@@ -90,18 +91,17 @@ class MultiplicationOperator: public BinaryOperatorExpression{
 
 class DivisionOperator: public BinaryOperatorExpression{
     public:
-    void printASM(Bindings *bindings, std::string returnRegister);
+    void printASM(Bindings *bindings);
 };
 
 class EqualityOperator: public BinaryOperatorExpression{
     public:
-    void printASM(Bindings *bindings, std::string returnRegister);
-    void printASM(Bindings *bindings, std::string returnRegister);
+    void printASM(Bindings *bindings);
 };
 
 class InequalityOperator: public BinaryOperatorExpression{
     public:
-    void printASM(Bindings *bindings, std::string returnRegister);
+    void printASM(Bindings *bindings);
 };
 
 class UnaryOperatorExpression: public Expression{
@@ -109,7 +109,7 @@ class UnaryOperatorExpression: public Expression{
     Expression *expression;
 
     public:
-    void printASM(Bindings *bindings, std::string returnRegister);
+    void printASM(Bindings *bindings);
     UnaryOperatorExpression(Expression *expression);
 };
 

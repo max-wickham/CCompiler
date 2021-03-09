@@ -1,10 +1,11 @@
 #include "expression.hpp"
-#include "parameter.hpp"
+#include "node.hpp"
+class Bindings;
 #include "type.hpp"
+#include "parameter.hpp"
 #include <iostream>
 
-
-FunctionCall::FunctionCall(std::string id, Parameter *parameter = nullptr){
+FunctionCall::FunctionCall(std::string id, Parameter *parameter){
     this->id = id;
     this->parameter = parameter;
 }
@@ -17,7 +18,7 @@ void FunctionCall::printASM(Bindings *bindings){
         parameter->createLabel(params, bindings);
         //calculate the total needed memory
         int mem = 0;
-        parameter->calculateTotalMem(mem);
+        parameter->calculateTotalMem(mem, bindings);
         //place the parameters on the stack
         parameter->placeOnStack(bindings, mem);
         //set the new bindings offset
@@ -37,6 +38,17 @@ void FunctionCall::printASM(Bindings *bindings){
     //put the return values into the stack
     bindings->getFunction(id)->processReturn(bindings);
 }
+
+void AssignmentOperator::printASM(Bindings *bindings){
+    //evaluate the expression
+    rightExpression->printASM(bindings);
+    leftExpression->getType(bindings)->saveVariable(bindings,((Variable*)leftExpression)->getName());
+}
+
+Type*  AssignmentOperator::getType(Bindings *bindings){
+    return leftExpression->getType(bindings);
+}
+
 
 void AdditionOperator::printASM(Bindings *bindings){
     //first evaluate left hand expression and place in register, the print asm places the value at the top of the stack
@@ -82,8 +94,24 @@ Type* Variable::getType(Bindings *bindings){
     return bindings->getVariable(id);
 }
 
+std::string Variable::getName(){
+    return id;
+}
+
+void Variable::printASM(Bindings *bindings){
+    bindings->getVariable(id)->placeVariableOnStack(bindings,id);
+}
+
 NumberConstant::NumberConstant(int value){
     this->value = value;
+}
+
+void NumberConstant::printASM(Bindings *bindings){
+    int upper = (value && 4294901760) >> 16;
+    int lower = (value && 65535);
+    std::cout << "lui    $v0," << upper << std::endl;
+    std::cout << "addi    $v0," << lower << std::endl;
+    std::cout << "sw    $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
 }
 
 Type*  NumberConstant::getType(Bindings *bindings){

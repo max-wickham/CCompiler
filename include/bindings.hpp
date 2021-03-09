@@ -6,8 +6,10 @@
 #include <string>
 #include <list>
 
-#include "type.hpp"
 #include "decleration.hpp"
+
+class Type;
+
 
 struct BindingData{
     Type *type;
@@ -15,24 +17,24 @@ struct BindingData{
     int size;
 };
 
-class StackObject{
-    protected:
-    std::string id;
-    BindingData bindingData;
-    StackObject *nextObject;
-    public:
+// class StackObject{
+//     protected:
+//     std::string id;
+//     BindingData bindingData;
+//     StackObject *nextObject;
+//     public:
 
-}
+// };
 
 class Bindings{
     protected:
-    static int label_count;
+    int label_count;
     std::string break_label;
     std::string continue_label;
     int current_offset;
     std::list<std::map<std::string, BindingData>> globalBindings;
     //this should be shared across all bindings
-    static std::map<std::string, Type*> functions;
+    std::map<std::string, Type*> functions;
     std::list<std::map<std::string, BindingData>> bindings;
     public:
     Bindings();
@@ -51,7 +53,7 @@ class Bindings{
     std::string getBreak();
     std::string getContinue();
     std::string createLabel(std::string id);
-    Bindings& operator=(const Bindings& rhs) {};
+    Bindings& operator=(const Bindings& rhs);
 };
 
 #endif

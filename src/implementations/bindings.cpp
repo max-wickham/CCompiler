@@ -6,9 +6,9 @@
 #include "decleration.hpp"
 #include "bindings.hpp"
 
-
-
 Bindings::Bindings(){
+    std::map<std::string,BindingData> map;
+    bindings.push_front(map);
 }
 
 void Bindings::addScope(){
@@ -24,14 +24,18 @@ void Bindings::setOffset(int offset){
     this->current_offset = offset;
 }
 
+int Bindings::currentOffset(){
+    return current_offset;
+}
+
 int Bindings::stackPosition(std::string id){
     std::list<std::map<std::string, BindingData>>::iterator it;
     for (it = bindings.begin(); it != bindings.end(); ++it){
         if(it->find(id) != it->end()){
             return it->at(id).offset;
         }
-        return 0;
     }
+    return 0;
 }
 
 void Bindings::addVariable(Decleration *decleration){
@@ -57,8 +61,8 @@ Type* Bindings::getVariable(std::string id){
         if(it->find(id) != it->end()){
             return it->at(id).type;
         }
-        return 0;
     }
+    return 0;
 }
 
 void Bindings::setBreak(std::string label){
