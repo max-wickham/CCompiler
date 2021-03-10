@@ -111,6 +111,7 @@ NumberConstant::NumberConstant(int value){
 void NumberConstant::printASM(Bindings *bindings){
     if(((value & 4294901760) >> 16) == 0){
         std::cout << "li    $v0," << value << std::endl;
+        std::cout << "sw    $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
     }
     else{
         int upper = (value & 4294901760) >> 16;
