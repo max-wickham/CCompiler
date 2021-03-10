@@ -18,7 +18,7 @@ Function::Function(Type *type, std::string& id, Statement* statement,
 void Function::printASM(Bindings *bindings){
     bindings->addFunction(id, type);
     //print the current label
-    std::cout << id << "(" << type->getName() << "):";
+    std::cout << id << "(" << type->getName() << "):" <<std::endl;
     //store the current frame pointer in +4
     std::cout << "sw      $fp,-4($sp)" << std::endl;
     //store the current return address in +8

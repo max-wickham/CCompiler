@@ -60,8 +60,8 @@ void AdditionOperator::printASM(Bindings *bindings){
     //next add the two registers and place in evaluation register
     std::string evalReg = leftExpression->getType(bindings)->getRegister(RegisterType::evaluateReg);
     std::string leftReg = leftExpression->getType(bindings)->getRegister(RegisterType::leftReg);
-    std::string rightReg = leftExpression->getType(bindings)->getRegister(RegisterType::rightReg);
-    std::cout << "addu   " << evalReg << "," << leftReg << "," << rightReg;
+    std::string rightReg = rightExpression->getType(bindings)->getRegister(RegisterType::rightReg);
+    std::cout << "addu   " << evalReg << "," << leftReg << "," << rightReg <<std::endl;
     //move the value from the evaluation register onto the stack
     leftExpression->getType(bindings)->extractFromRegister(bindings,RegisterType::evaluateReg);
 }
