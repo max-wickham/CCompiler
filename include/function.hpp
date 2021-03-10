@@ -16,7 +16,7 @@ class Function: public Node{
     ParameterDefinition *firstParameter;
     public:
     Function(Type *type, std::string& id, Statement* statement,
-        ParameterDefinition *firstParameter = nullptr);
+        ParameterDefinition *firstParameter);
     void printASM(Bindings *bindings);
 };
 

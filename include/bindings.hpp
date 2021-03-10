@@ -4,9 +4,12 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <list>
 
-#include "type.hpp"
 #include "decleration.hpp"
+
+class Type;
+
 
 struct BindingData{
     Type *type;
@@ -14,30 +17,43 @@ struct BindingData{
     int size;
 };
 
+// class StackObject{
+//     protected:
+//     std::string id;
+//     BindingData bindingData;
+//     StackObject *nextObject;
+//     public:
+
+// };
+
 class Bindings{
     protected:
-    static int label_count;
+    int label_count;
     std::string break_label;
     std::string continue_label;
     int current_offset;
-    std::map<std::string, BindingData> globalBindings;
-    std::map<std::string, BindingData> bindings;
+    std::list<std::map<std::string, BindingData>> globalBindings;
+    //this should be shared across all bindings
+    std::map<std::string, Type*> functions;
+    std::list<std::map<std::string, BindingData>> bindings;
     public:
-    Bindings(int begin_offset);
+    Bindings();
+    void addScope();
+    void deleteScope();
     void setOffset(int offset);
     int currentOffset();
     int stackPosition(std::string id);
     void addVariable(Decleration *decleration);
-    void addFunction(std::string id, std::string label);
-    void addLabel(std::string id, int position);
+    void addFunction(std::string id, Type *type);
+    Type* getFunction(std::string id);
+    Type* getVariable(std::string id);
+    //void addLabel(std::string id, int position);
     void setBreak(std::string label);
     void setContinue(std::string label);   
-    Bindings* createNewBindingsScope();
-    //shoudl copy in both global varaibles and the current offset
     std::string getBreak();
     std::string getContinue();
     std::string createLabel(std::string id);
-    Bindings& operator=(const Bindings& rhs) {};
+    Bindings& operator=(const Bindings& rhs);
 };
 
 #endif

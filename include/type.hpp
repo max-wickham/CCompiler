@@ -3,34 +3,8 @@
 
 #include "node.hpp"
 #include "bindings.hpp"
-
-class Type : public Node
-{
-protected:
-	bool _signed;
-	bool _extern;
-	bool _static;
-	bool _const;
-public:
-	virtual std::string getId() const = 0;
-	virtual void loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings) const = 0;
-	virtual void evaluateReturn(Bindings *bindings) const = 0;
-    
-	virtual Type type() = 0;
-	virtual int getSize(int arraySize);
-	virtual void setSigned(bool _signed);
-	virtual void setExtern(bool _extern);
-	virtual void setStatic(bool _static);
-	virtual void setConst(bool _const);
-};
-
-class Int : public Type {
-public:
-	Int();
-	int getSize(int arraySize);
-	void loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings);
-	void evaluateReturn(Bindings *bindings);
-};
+#include <string>
+// #include <map>
 
 struct ReturnRegisters{
 	bool a0 = false;
@@ -40,4 +14,67 @@ struct ReturnRegisters{
 	int currentMemOffset = 0;
 };
 
-#endif
+enum RegisterType{
+	leftReg,
+	rightReg,
+	evaluateReg,
+	returnReg
+};
+
+class Type : public Node
+{
+protected:
+	bool _signed;
+	bool _extern;
+	bool _static;
+	bool _const;
+public:
+	virtual int getSize() = 0;
+	virtual std::string getName() = 0;
+	virtual void loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings) = 0;
+	virtual void evaluateReturn(Bindings *bindings) = 0;
+	virtual void processReturn(Bindings *bindings) = 0;
+	// //places the value at the top of the stack into the register
+	virtual void placeInRegister(Bindings *bindings, RegisterType type) = 0;
+	// //places the value in the register at the top of the stack
+	virtual void extractFromRegister(Bindings *bindings, RegisterType type) = 0;
+	// //gets the register string from a register type
+	virtual std::string getRegister(RegisterType type) = 0;
+	virtual void saveVariable(Bindings *bindings, std::string id) = 0;
+	virtual void placeVariableOnStack(Bindings *bindings, std::string id) = 0;
+};
+
+class Int : public Type { 
+protected:
+	const int size = 4;
+public:
+	Int();
+	int getSize() override;
+	std::string getName() override;
+	void loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings) override;
+	void evaluateReturn(Bindings *bindings) override;
+	void processReturn(Bindings *bindings) override;
+	void placeInRegister(Bindings *bindings, RegisterType type) override;
+	void extractFromRegister(Bindings *bindings, RegisterType type);
+	std::string getRegister(RegisterType type) override;
+	void saveVariable(Bindings *bindings, std::string id);
+	void placeVariableOnStack(Bindings *bindings, std::string id);
+};
+
+// class Bool : public Type {
+// protected:
+// 	const int size = 4;
+// public:
+// 	Bool();
+// 	int getSize();
+// 	std::string getName();
+// 	void loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings);
+// 	void evaluateReturn(Bindings *bindings);
+// 	void processReturn(Bindings *bindings);
+// 	void placeInRegister(Bindings *bindings, RegisterType type);
+// 	void extractFromRegister(Bindings *bindings, RegisterType type);
+// 	std::string getRegister(RegisterType type);
+// 	void saveVariable(Bindings *bindings, std::string id);
+// };
+
+ #endif
