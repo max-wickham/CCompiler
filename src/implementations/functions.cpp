@@ -7,10 +7,10 @@
 #include <string>
 #include <iostream>
 
-Function::Function(Type *type, std::string& id, Statement* statement,
+Function::Function(Type *type, std::string* id, Statement* statement,
         ParameterDefinition *firstParameter){
             this->type = type;
-            this->id = id;
+            this->id = *id;
             this->statement = statement;
             this->firstParameter = firstParameter;
 }
