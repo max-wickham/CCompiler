@@ -17,13 +17,14 @@ Function::Function(Type *type, std::string* id, Statement* statement,
 
 void Function::printASM(Bindings *bindings){
     std::string params = "";
-    if(firstParameter != nullptr){
+    //if(firstParameter != nullptr){
         //create the label string needed to find where to jump to
-        firstParameter->createLabel(params, bindings);
-    }
+    //    firstParameter->createLabel(params, bindings);
+    //}
     bindings->addFunction(id, type);
     //print the current label
-    std::cout << id << "(" << params << "):" <<std::endl;
+    std::cout << ".global " << id << std::endl;
+    std::cout << id << ":" <<std::endl;
     //store the current frame pointer in +4
     std::cout << "sw      $fp,-4($sp)" << std::endl;
     //store the current return address in +8

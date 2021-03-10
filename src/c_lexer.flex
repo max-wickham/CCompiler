@@ -2,7 +2,8 @@
 
 %{
 
-#include "c_parser.tab.hpp"     
+#include "c_parser.tab.hpp"  
+#include <iostream>   
 
 %}
                                     /*A useful tool : https://regexr.com/ , defining useful regex for later use */
@@ -70,8 +71,8 @@ ALL .
 [.][.][.]	{ return T_ellipsis; }
 [;]		{ return T_sc; }
 [,]		{ return T_comma; }
-[(]		{ return T_lrb; }
-[)]		{ return T_rrb; }
+[(]		{return T_lrb; }
+[)]		{return T_rrb; }
 [{]             { return T_lcb; }
 [}]             { return T_rcb; }
 [[]		{ return T_lsb; }

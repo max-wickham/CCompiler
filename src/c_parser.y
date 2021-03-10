@@ -10,6 +10,7 @@
 #include "statement.hpp"
 #include "type.hpp"
 #include "top.hpp"
+#include <iostream>
 
 
  #include <cassert>
@@ -64,7 +65,7 @@ void yyerror(const char *);
 %%
 
 
-ROOT : TOP { g_root = $1; }
+ROOT : TOP {g_root = $1; }
      ;
 
 TOP  : FUNCTION {$$ = new Top(); $$->addFunction($1);}
@@ -90,6 +91,7 @@ Top *g_root; // Definition of variable (to match declaration earlier)
 
 Top *parseAST()
 {
+  //yyin  = fopen(fileIn.c_str(), "r"); 
   g_root=0;
   yyparse();
   return g_root;
