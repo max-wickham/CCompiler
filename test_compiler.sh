@@ -1,6 +1,11 @@
 #!/bin/bash
+make clean
+make -B
 
-make Makefile
+#if [[ $? -ne 0 ]]; then
+    #echo "==========================="
+    #echo "Failed to build "
+    #exit 
 
 PASSED=0
 FAILED=0
@@ -20,12 +25,13 @@ for i in compiler_tests/*; do
     echo "==========================="
     echo "Input file : ${j}"
 
+    fn = basename(${j})
 
-    ./bin/c_compiler -S ${j} -o test_program.s 
-    mips-linux-gnu-gcc -mfp32 -o test_program.o -c test_program.s
-    mips-linux-gnu-gcc -mfp32 -static -o test_program test_program.o ${nj}_driver.c
+    ./bin/c_compiler -S ${j} -o bin/test_program.s 
+    mips-linux-gnu-gcc -mfp32 -o bin/test_program.o -c bin/test_program.s
+    mips-linux-gnu-gcc -mfp32 -static -o bin/test_program bin/test_program.o ${nj}_driver.c
 
-    if qemu-mips test_program;
+    if qemu-mips bin/test_program;
     then 
         echo "PASS"
         PASSED=$(( ${PASSED}+1 ));
