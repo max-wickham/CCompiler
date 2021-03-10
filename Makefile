@@ -18,12 +18,13 @@ $(LINK_TARGET) : src/c_lexer.yy.o src/c_parser.tab.o $(OBJS)
 src/%.o: src/%.cpp $(HPPFILES)
 	$(CC) $(CPPFLAGS) -c -o $@ $<
 
+src/c_lexer.yy.cpp : src/c_lexer.flex src/c_parser.tab.hpp
+	flex -o src/c_lexer.yy.cpp src/c_lexer.flex
+
 src/c_parser.tab.cpp src/c_parser.tab.hpp: src/c_parser.y
 	yacc -v -d src/c_parser.y -o src/c_parser.tab.cpp
 	mkdir -p bin;
 
-src/c_lexer.yy.cpp : src/c_lexer.flex src/c_parser.tab.hpp
-	flex -o src/c_lexer.yy.cpp src/c_lexer.flex
 
 makeobj:
 	$(CC) $(CPPFLAGS) src/$(CPPALLTEST) -o bin/testout

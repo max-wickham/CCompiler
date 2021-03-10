@@ -2,10 +2,11 @@
 make clean
 make -B
 
-#if [[ $? -ne 0 ]]; then
-    #echo "==========================="
-    #echo "Failed to build "
-    #exit 
+if [[ $? -ne 0 ]]; then
+    echo "==========================="
+    echo "Failed to build "
+    exit 
+fi 
 
 PASSED=0
 FAILED=0
@@ -25,7 +26,6 @@ for i in compiler_tests/*; do
     echo "==========================="
     echo "Input file : ${j}"
 
-    fn = basename(${j})
 
     ./bin/c_compiler -S ${j} -o bin/test_program.s 
     mips-linux-gnu-gcc -mfp32 -o bin/test_program.o -c bin/test_program.s

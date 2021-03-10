@@ -2,7 +2,7 @@
 
 %{
 
-#include       
+#include "c_parser.tab.hpp"     
 
 %}
                                     /*A useful tool : https://regexr.com/ , defining useful regex for later use */
@@ -13,7 +13,7 @@ ASSIGNMENT_OPERATOR (([<>][<>]|[*\/%+\-&^|])[=])
 INTEGERSUFFIX ([uU][lL]|[lL][uU]|[uUlL])
                                     /* defines the suffixes which indicates the type of a literal , u or U = unsigned , l or L = long . etc : https://en.cppreference.com/w/cpp/language/integer_literal */
 DECIMALCONSTANT ([1-9][0-9]*)
-OCTCONSTANT     ([0][0-7]*)
+OCTALCONSTANT     ([0][0-7]*)
 HEXCONSTANT     ([0][xX][0-9A-Fa-f]+)
                                     /* Numerical constants simples.  */
 CHARCONSTANT (['](([\\]['])|([^']))*['])                                    
@@ -42,7 +42,6 @@ ALL .
 (auto)      {return T_auto;}
 (register)  {return T_register;}
 (static)    {return T_static;}
-(extern)      {return T_extern;}
 (typedef)   { return T_typedef; }
 
    /* Type qualifiers */
@@ -63,7 +62,7 @@ ALL .
 {STRINGLITERAL}	{ std::string tmp(yytext); yylval.string = new std::string(tmp.substr(1, yyleng-2));
 		  return T_stringliteral; }
 
-{CHARCONSTANT} { yylval.number = yytext[1]; return T_INT_CONST; }
+{CHARCONSTANT} { yylval.number = yytext[1]; return T_int_const; }
 
 
    /*Here should be the operators*/
@@ -87,10 +86,10 @@ ALL .
 [\^]		{ return T_xor; }
 [&]		{ yylval.string = new std::string(yytext); return T_and; }
 [=][=]		{ yylval.string = new std::string(yytext); return T_logical_equality; }
-[!][=]		{ yylval.string = new std::string(yytext); return T_logical_inquality; }
+[!][=]		{ yylval.string = new std::string(yytext); return T_logical_inequality; }
 ([<>][=])|[<>]	{ yylval.string = new std::string(yytext); return T_rel_op; }  
 [<>][<>]	{ yylval.string = new std::string(yytext); return T_shift; }
-[*] 		{ yylval.string = new std::string(yytext); return T_mutl; }
+[*] 		{ yylval.string = new std::string(yytext); return T_mult; }
 [\/]		{ yylval.string = new std::string(yytext); return T_div; }
 [%]		{ yylval.string = new std::string(yytext); return T_rem; }
 [~]		{ yylval.string = new std::string(yytext); return T_tilde; }
