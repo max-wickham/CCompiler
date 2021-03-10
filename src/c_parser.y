@@ -14,7 +14,7 @@
 
  #include <cassert>
 
-extern const Top *g_root; // A way of getting the AST out ??????
+extern Top *g_root; // A way of getting the AST out ??????
                           // 
 int yylex(void);
 void yyerror(const char *);
@@ -22,12 +22,15 @@ void yyerror(const char *);
 
 }
 
-// ???????/ need to define AST node avec max
 %union{
-  const Top *top;
+  Top *top;
   double number;
   std::string *string;
   Statement *statement;
+  Function *function;
+  Expression *expression;
+  ReturnStatement *returnstatement;
+  Int *intt;
 }
 
 %token 
@@ -49,9 +52,11 @@ void yyerror(const char *);
 
 %type <top> TOP
 %type <number> T_int_const
-%type <string> T_return T_int T_sc T_lcb T_rcb T_lrb T_rrb T_identifier 
-%type <Statement> STATEMENT 
-%type <Expression> EXPR
+%type <string> T_return T_sc T_lcb T_rcb T_lrb T_rrb T_identifier 
+%type <statement> STATEMENT 
+%type <expression> EXPR
+%type <function> FUNCTION
+%type <intt> INT
 
 
 %start ROOT
@@ -62,21 +67,28 @@ void yyerror(const char *);
 ROOT : TOP { g_root = $1; }
      ;
 
-TOP  :T_int T_identifier T_lrb T_rrb T_lcb STATEMENT T_rcb {$$ = new function($1,$2,$6,nullptr);}     
+TOP  : FUNCTION {$$ = new Top(); $$->addFunction($1);}
+     | TOP FUNCTION {$$->addFunction($2);}     
      ;
 
-STATEMENT : T_return EXPR T_sc {$$ = new Return($2,nullptr);}
+FUNCTION : INT T_identifier T_lrb T_rrb T_lcb STATEMENT T_rcb {$$ = new Function($1,$2,$6,nullptr);}
+         ;
+
+STATEMENT : T_return EXPR T_sc {$$ = new ReturnStatement($2,nullptr);}
           ;
 
 EXPR      : T_int_const {$$ = new NumberConstant($1);}
           ;
 
+INT : T_int {$$ = new Int();}
+    ;
+
  
 %%
 
-const Top *g_root; // Definition of variable (to match declaration earlier)
+Top *g_root; // Definition of variable (to match declaration earlier)
 
-const Top *parseAST()
+Top *parseAST()
 {
   g_root=0;
   yyparse();
