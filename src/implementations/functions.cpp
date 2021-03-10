@@ -16,9 +16,14 @@ Function::Function(Type *type, std::string& id, Statement* statement,
 }
 
 void Function::printASM(Bindings *bindings){
+    std::string params = "";
+    if(firstParameter != nullptr){
+        //create the label string needed to find where to jump to
+        firstParameter->createLabel(params, bindings);
+    }
     bindings->addFunction(id, type);
     //print the current label
-    std::cout << id << "(" << type->getName() << "):" <<std::endl;
+    std::cout << id << "(" << params << "):" <<std::endl;
     //store the current frame pointer in +4
     std::cout << "sw      $fp,-4($sp)" << std::endl;
     //store the current return address in +8
@@ -33,7 +38,7 @@ void Function::printASM(Bindings *bindings){
     // std::cout << "sw      $s6,-36($sp)" << std::endl;
     // std::cout << "sw      $s7,-40($sp)" << std::endl;
     //set the current offset to + 44
-    bindings->setOffset(-8);
+    bindings->setOffset(-12);
     //load the parameters into memory 
     ReturnRegisters returnRegisters;
     if(firstParameter != nullptr){

@@ -20,6 +20,13 @@ void ParameterDefinition::createScope(Bindings *bindings, ReturnRegisters &retur
         parameterNext->createScope(bindings, returnRegisters);
     }
 }
+void ParameterDefinition::createLabel(std::string &label, Bindings *bindings){
+    label += decleration->type->getName();
+    if(parameterNext != nullptr){
+        label += ",";
+        parameterNext->createLabel(label,bindings);
+    }
+}
 
 Parameter::Parameter(Expression *expression, Parameter *parameterNext){
     this->expression = expression;

@@ -41,8 +41,10 @@ void FunctionCall::printASM(Bindings *bindings){
 
 void AssignmentOperator::printASM(Bindings *bindings){
     //evaluate the expression
+    //std::cout << "start assignment"<< std::endl;
     rightExpression->printASM(bindings);
     leftExpression->getType(bindings)->saveVariable(bindings,((Variable*)leftExpression)->getName());
+    //std::cout << "end assignment"<< std::endl;
 }
 
 Type*  AssignmentOperator::getType(Bindings *bindings){
@@ -107,11 +109,16 @@ NumberConstant::NumberConstant(int value){
 }
 
 void NumberConstant::printASM(Bindings *bindings){
-    int upper = (value && 4294901760) >> 16;
-    int lower = (value && 65535);
-    std::cout << "lui    $v0," << upper << std::endl;
-    std::cout << "addi    $v0," << lower << std::endl;
-    std::cout << "sw    $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
+    if(((value & 4294901760) >> 16) == 0){
+        std::cout << "li    $v0," << value << std::endl;
+    }
+    else{
+        int upper = (value & 4294901760) >> 16;
+        int lower = (value & 65535);
+        std::cout << "lui    $v0," << upper << std::endl;
+        std::cout << "addi    $v0," << lower << std::endl;
+        std::cout << "sw    $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
+    }
 }
 
 Type*  NumberConstant::getType(Bindings *bindings){

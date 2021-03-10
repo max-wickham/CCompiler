@@ -1,6 +1,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <iostream>
 
 #include "type.hpp"
 #include "decleration.hpp"
@@ -43,7 +44,10 @@ void Bindings::addVariable(Decleration *decleration){
     data.type = decleration->type;
     data.size = decleration->type->getSize();
     data.offset = current_offset;
+    //std::cout << "cureent name " << decleration->id << std::endl;
+    //std::cout << "cureent offset " << current_offset << std::endl;
     current_offset -= data.size;
+    //std::cout << "cureent offset " << current_offset << std::endl;
     bindings.begin()->insert(std::pair<std::string,BindingData>(decleration->id,data));
 }
 

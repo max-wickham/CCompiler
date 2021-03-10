@@ -24,7 +24,7 @@ void ReturnStatement::printASM(Bindings* bindings){
     // std::cout << "sw      $s6,-36($fp)" << std::endl;
     // std::cout << "sw      $s7,-40($fp)" << std::endl;
     //the return register needs to be loaded back 
-    std::cout << "sw      $ra,-8($fp)" << std::endl;
+    std::cout << "lw      $ra,-8($fp)" << std::endl;
     //the frame and stack pointer need to be reset
     std::cout << "move    $sp,$fp" << std::endl;
     std::cout << "lw      $fp,-4($fp)" << std::endl;

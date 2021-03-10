@@ -17,6 +17,7 @@ class ParameterDefinition: public Node{
     ParameterDefinition(Decleration *decleration, ParameterDefinition *parameterNext);
     //add the parameters names, which should already be on the stack into the current scope
     void createScope(Bindings *bindings, ReturnRegisters &returnRegisters);
+    void createLabel(std::string &label, Bindings *bindings);
 };
 
 class Parameter: public Node{

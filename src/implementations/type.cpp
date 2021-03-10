@@ -9,16 +9,16 @@ Int::Int(){}
 
 std::string Int::getRegister(RegisterType type){
     if(type == RegisterType::leftReg){
-        return "v0";
+        return "$v0";
     }
     if(type == RegisterType::rightReg){
-        return "v1";
+        return "$v1";
     }
     if(type == RegisterType::evaluateReg){
-        return "t8";
+        return "$t8";
     }
     if(type == RegisterType::returnReg){
-        return "v0";
+        return "$v0";
     }
     return "v0";
 }
@@ -69,22 +69,23 @@ void Int::processReturn(Bindings *bindings){
 }
 
 void Int::placeInRegister(Bindings *bindings, RegisterType type){
-    std::cout << "lw    " << this->getRegister(type) << " " << bindings->currentOffset() << "($fp)" << std::endl;
+    std::cout << "lw    " << this->getRegister(type) << "," << bindings->currentOffset() << "($fp)" << std::endl;
 }
 
 void Int::extractFromRegister(Bindings *bindings, RegisterType type){
-    std::cout << "sw    " << this->getRegister(type) << " " << bindings->currentOffset() << "($fp)" << std::endl;
+    std::cout << "sw    " << this->getRegister(type) << "," << bindings->currentOffset() << "($fp)" << std::endl;
 }
 
 void Int::saveVariable(Bindings *bindings, std::string id){
-    std::cout << "lw    " << this->getRegister(RegisterType::evaluateReg)
+    std::cout << "lw    " << this->getRegister(RegisterType::evaluateReg) << ","
         << bindings->currentOffset() << "($fp)" << std::endl;
-    std::cout << "sw    " << this->getRegister(RegisterType::evaluateReg)
+    std::cout << "sw    " << this->getRegister(RegisterType::evaluateReg) << ","
         << bindings->stackPosition(id) << "($fp)" << std::endl;
 }
 
 void Int::placeVariableOnStack(Bindings *bindings, std::string id){
-    this->placeInRegister(bindings,RegisterType::evaluateReg);
+    std::cout << "lw    " << this->getRegister(RegisterType::evaluateReg)
+        << "," << bindings->stackPosition(id) << "($fp)" << std::endl;
     this->extractFromRegister(bindings,RegisterType::evaluateReg);
 }
 

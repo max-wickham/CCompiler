@@ -8,11 +8,13 @@
 #include <vector>
 
 class Top : public Node{
+    protected:
+    std::vector<Function*> functions;
+    std::vector<VariableDefinition*> globalVariables;
     public:
-    std::vector<Function> functions;
-    std::vector<VariableDefinition> globalVariables;
+    Top();
     void printASM();
-    void addFunction();
+    void addFunction(Function *function);
 };
 
 #endif
