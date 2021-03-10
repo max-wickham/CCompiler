@@ -27,7 +27,7 @@ for i in compiler_tests/*; do
     echo "Input file : ${j}"
 
 
-    ./bin/c_compiler -S ${j} -o bin/test_program.s 
+    ./bin/c_compiler < ${j} > bin/test_program.s 
     mips-linux-gnu-gcc -mfp32 -o bin/test_program.o -c bin/test_program.s
     mips-linux-gnu-gcc -mfp32 -static -o bin/test_program bin/test_program.o ${nj}_driver.c
 
