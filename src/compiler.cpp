@@ -3,6 +3,7 @@
 
 #include <cstdio>
 #include <string>
+#include <iostream>
 
 Top* parseAST();
 
@@ -10,8 +11,9 @@ int main(int, char**)
 {
 	try
 	{
-		Top* ast(parseAST());
-		ast->printASM();	
+		Top* ast = parseAST();
+		//ast->printASM();	
+		//std::cout << "hello";
 	}
 	catch(const std::exception& e)
 	{
