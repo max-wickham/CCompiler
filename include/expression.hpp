@@ -52,6 +52,15 @@ class NumberConstant: public Expression{
     Type*  getType(Bindings *bindings) override;
 };
 
+class FloatConstant: public Expression{
+    protected:
+    float value;
+    public:
+    FloatConstant(float value);
+    void printASM(Bindings *bindings) override;
+    Type*  getType(Bindings *bindings) override;
+};
+
 class BinaryOperatorExpression: public Expression{
     protected:
     Expression *leftExpression;
@@ -61,13 +70,13 @@ class BinaryOperatorExpression: public Expression{
     BinaryOperatorExpression(Expression *leftExpression, Expression *rightExpression);
     void printASM(Bindings *bindings, std::string returnRegister);
     void print() const;
+    Type* getType(Bindings *bindings) override;
 };
 
 class AssignmentOperator: public BinaryOperatorExpression{
     public:
     using BinaryOperatorExpression::BinaryOperatorExpression;
     void printASM(Bindings *bindings) override;
-    Type*  getType(Bindings *bindings) override;
 };
 
 class AdditionOperator: public BinaryOperatorExpression{
@@ -75,32 +84,71 @@ class AdditionOperator: public BinaryOperatorExpression{
     using BinaryOperatorExpression::BinaryOperatorExpression;
     void printASM(Bindings *bindings) override;
     //void printASM(Bindings *bindings, std::string returnRegister);
-    Type* getType(Bindings *bindings) override;
 };
 
 class SubtractionOperator: public BinaryOperatorExpression{
     public:
+    using BinaryOperatorExpression::BinaryOperatorExpression;
     void printASM(Bindings *bindings) override;
-    void printASM(Bindings *bindings, std::string returnRegister);
 };
 
 class MultiplicationOperator: public BinaryOperatorExpression{
     public:
-    void printASM(Bindings *bindings, std::string returnRegister); 
+    using BinaryOperatorExpression::BinaryOperatorExpression;
+    void printASM(Bindings *bindings); 
 };
 
 class DivisionOperator: public BinaryOperatorExpression{
     public:
+    using BinaryOperatorExpression::BinaryOperatorExpression;
     void printASM(Bindings *bindings);
 };
 
 class EqualityOperator: public BinaryOperatorExpression{
     public:
+    using BinaryOperatorExpression::BinaryOperatorExpression;
     void printASM(Bindings *bindings);
 };
 
 class InequalityOperator: public BinaryOperatorExpression{
     public:
+    using BinaryOperatorExpression::BinaryOperatorExpression;
+    void printASM(Bindings *bindings);
+};
+
+class ModuloOperator: public BinaryOperatorExpression{
+    public:
+    using BinaryOperatorExpression::BinaryOperatorExpression;
+    void printASM(Bindings *bindings);
+};
+
+class LogicalAndOperator: public BinaryOperatorExpression{
+    public:
+    using BinaryOperatorExpression::BinaryOperatorExpression;
+    void printASM(Bindings *bindings);
+};
+
+class BitwiseAndOperator: public BinaryOperatorExpression{
+    public:
+    using BinaryOperatorExpression::BinaryOperatorExpression;
+    void printASM(Bindings *bindings);
+};
+
+class LogicalOrOperator: public BinaryOperatorExpression{
+    public:
+    using BinaryOperatorExpression::BinaryOperatorExpression;
+    void printASM(Bindings *bindings);
+};
+
+class BitwiseOrOperator: public BinaryOperatorExpression{
+    public:
+    using BinaryOperatorExpression::BinaryOperatorExpression;
+    void printASM(Bindings *bindings);
+};
+
+class BitwiseXorOperator: public BinaryOperatorExpression{
+    public:
+    using BinaryOperatorExpression::BinaryOperatorExpression;
     void printASM(Bindings *bindings);
 };
 
@@ -111,6 +159,30 @@ class UnaryOperatorExpression: public Expression{
     public:
     void printASM(Bindings *bindings);
     UnaryOperatorExpression(Expression *expression);
+};
+
+class DefreferenceOperator: public UnaryOperatorExpression{
+    public:
+    using UnaryOperatorExpression::UnaryOperatorExpression;
+    void printASM(Bindings *bindings);
+};
+
+class AddressOperator: public UnaryOperatorExpression{
+    public:
+    using UnaryOperatorExpression::UnaryOperatorExpression;
+    void printASM(Bindings *bindings);
+};
+
+class NotOperator: public UnaryOperatorExpression{
+    public:
+    using UnaryOperatorExpression::UnaryOperatorExpression;
+    void printASM(Bindings *bindings);
+};
+
+class BitwiseNotOperator: public UnaryOperatorExpression{
+    public:
+    using UnaryOperatorExpression::UnaryOperatorExpression;
+    void printASM(Bindings *bindings);
 };
 
 #endif

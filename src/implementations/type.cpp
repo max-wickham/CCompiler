@@ -2,8 +2,17 @@
 
 #include "node.hpp"
 #include "bindings.hpp"
+#include "expression.hpp"
 #include <string>
 #include <iostream>
+
+std::string IntegralType::getAdditionOperator(){
+    return "addu";
+}
+
+std::string IntegralType::getSubtractionOperator(){
+    return "subbu";
+}
 
 Int::Int(){}
 
@@ -88,6 +97,30 @@ void Int::placeVariableOnStack(Bindings *bindings, std::string id){
         << "," << bindings->stackPosition(id) << "($fp)" << std::endl;
     this->extractFromRegister(bindings,RegisterType::evaluateReg);
 }
+
+void Int::placeVariableOnStack(Bindings *bindings){
+    //load the address from the stack
+    std::cout << "sw    " << this->getRegister(RegisterType::evaluateReg)
+        << "," << bindings->currentOffset() << "($fp)" << std::endl;
+    //put the value at the address into evaluate register
+    std::cout << "lw    " << this->getRegister(RegisterType::evaluateReg)
+        << "," << 0 << "("  << this->getRegister(RegisterType::evaluateReg) << ")" << std::endl;
+    //put the value in the evaluate register onto the stack
+    std::cout << "sw    " << this->getRegister(RegisterType::evaluateReg)
+        << "," << bindings->currentOffset() << "($fp)" << std::endl;
+    this->extractFromRegister(bindings,RegisterType::evaluateReg);
+}
+
+Pointer::Pointer(Type *type){
+    this->type = type;
+}
+
+void Pointer::defreference(Bindings *bindings){
+    this->type->placeVariableOnStack(bindings);
+}
+
+
+
 
 // std::string Bool::getRegister(RegisterType type){
 //     if(type = RegisterType::leftReg){

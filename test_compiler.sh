@@ -5,6 +5,7 @@ make -B
 if [[ $? -ne 0 ]]; then
     echo "==========================="
     echo "Failed to build "
+    make clean
     exit 
 fi 
 
@@ -48,3 +49,5 @@ done
 echo "########################################"
 echo "Passed ${PASSED} , Failed ${FAILED}".
 echo ""
+
+make clean

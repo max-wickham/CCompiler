@@ -44,4 +44,5 @@ clean :
 	rm -f src/*.yy.cpp
 	rm -f src/*.output
 	rm -f src/*.o
+	rm -f src/implementations/*.o
 	
