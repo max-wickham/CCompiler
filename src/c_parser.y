@@ -196,7 +196,7 @@ MULTEXP        : UNARYEXP
                | MULTEXP T_rem  UNARYEXP
                ;
 
-UNARYEXP       : POSTFIXEXPRESSION {$$ = $1}
+UNARYEXP       : POSTFIXEXP {$$ = $1}
                | T_inc_dec UNARYEXP
                | T_sizeof UNARYEXP {$$ = $2}
                | T_sizeof T_lrb TYPE  T_rrb 
@@ -209,7 +209,25 @@ UNARYOPS       : T_and       { $$ = $1; }
                | T_not       { $$ = $1; }
                ;
 
+POSTFIXEXP     : PRIMARYEXP { $$ = $1; }
+               | POSTFIXEXP T_lsb EXPRESSION T_rsb {$$ = new ;}
+               | POSTFIXEXP T_lrb POSTFIXEXP2 {$$ = new ;}
+               | POSTFIXEXP T_dot T_identifier {$$ = $1 ;}
+               | POSTFIXEXP T_arrow T_identifier {$$ = $1;}
+               | POSTFIXEXP T_inc_dec {}
+               ;
 
+POSTFIXEXP2    : T_rrb 
+               ;
+
+PRIMARYEXP     : T_identifier {}
+               | CONSTANT
+               | T_stringliteral
+               | T_lrb EXPRESSION T_rrb
+               ;
+
+CONSTANT       : T_int_const {$$ = new ;}
+               ;
 
 
 
