@@ -117,13 +117,15 @@ STATEMENTLIST     : STATEMENT               {$$ = $1}
                   | STATEMENTLIST STATEMENT {$2 = ;}
                   ;
 
-STATEMENT : COMPOUNDSTATEMENT {$$ = $1}
-          |
-          |
+STATEMENT : COMPOUNDSTATEMENT   {$$ = $1}
+          | ITERATIONSTATEMENT  {$$ = $1}
+          | SELECTIONSTATEMENT  {$$ = $1}
+          | EXPRESSIONSTATEMENT {$$ = $1}
           ;
 
-EXPR      : T_int_const {$$ = new NumberConstant($1);}
-          ;
+EXPRESSIONSTATEMENT     : T_sc           {$$ = new ;}
+                        | Expression T_sc {$$ =}
+                        ;
 
 INT : T_int {$$ = new Int();}
     ;
