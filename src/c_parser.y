@@ -123,12 +123,22 @@ STATEMENT : COMPOUNDSTATEMENT   {$$ = $1}
           | EXPRESSIONSTATEMENT {$$ = $1}
           ;
 
-EXPRESSIONSTATEMENT     : T_sc           {$$ = new ;}
-                        | Expression T_sc {$$ =}
-                        ;
+EXPRESSIONSTATEMENT : T_sc           {$$ = new ;}
+                    | EXPRESSION T_sc {$$ = }
+                    ;
+
+SELECTIONSTATEMENT  : T_if T_lrb EXPRESSION T_rrb STATEMENT {$$ = new IfElseStatement($5);}
+                    | T_if T_lrb EXPRESSION T_rrb Statement T_else Statement {$$ = new IfElseStatement($5,$7);}
+                    | T_switch T_lrb EXPRESSION T_rrb STATEMENT {$$ = new SwitchStatement($5);}
+                    ;
+
+ITERATIONSTATEMENT  :
+                    |
+                    |
+                    ;
 
 INT : T_int {$$ = new Int();}
-    ;
+    ; 
 
  
 %%
