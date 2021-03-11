@@ -114,7 +114,7 @@ COMPOUNDSTATEMENT2 : T_rcb {$$ = new CompoundStatement();}
                    ;
 
 STATEMENTLIST     : STATEMENT               {$$ = $1}
-                  | STATEMENTLIST STATEMENT {$2 = ;}
+                  | STATEMENTLIST STATEMENT {$$ = ;}
                   ;
 
 STATEMENT : COMPOUNDSTATEMENT   {$$ = $1}
@@ -132,10 +132,86 @@ SELECTIONSTATEMENT  : T_if T_lrb EXPRESSION T_rrb STATEMENT {$$ = new IfElseStat
                     | T_switch T_lrb EXPRESSION T_rrb STATEMENT {$$ = new SwitchStatement($5);}
                     ;
 
-ITERATIONSTATEMENT  :
-                    |
-                    |
+ITERATIONSTATEMENT  : T_while T_lrb EXPRESSION T_rrb STATEMENT {$$ = new ;}
+                    | T_do STATEMENT T_while T_lrb EXPRESSION T_rrb T_sc {$$ = new ;}
+                    | T_for T_lrb EXPRESSION T_sc EXPRESSION T_sc EXPRESSION T_rrb STATEMENT {$$ = new ;}
                     ;
+
+EXPRESSION :
+           | UNARYEXP ASSIGN_OP ASSIGNMENT {  
+             if(*%2 == "="){
+               $$ = new AssignExpression($1,$3);
+             }
+             if()
+           }
+
+ASSIGN_OP   :	T_assignment_op { ; }
+	          |	T_eq { ; }
+	          ;
+
+CONDEXP    : LOGICALOREXP {$$ = $1;}
+           | LOGICALO
+           ;
+
+  /* here we add the precdents of ops */
+
+LOGICALOREXP  : LOGICALANDEXP {$$ = $1 ;}
+              | LOGICALOREXP T_logical_or LOGICALAND {$$ = new ;}
+              ;
+
+LOGICALANDEXP : INCLUSIVEOREXP {$$ = $1 ;}
+              | LOGICALOREXP T_logical_and INCLUSIVEOREXP
+              ;
+INCLUSIVEOREXP : EXCLUSIVEOREXP {$$ = $1 ;}
+               | INCLUSIVEOREXP T_or EXCLUSIVEOREXP { $$ = new ;}
+               ;
+
+EXCLUSIVEOREXP : ANDEXP {$$ = $1 ;}
+               | EXCLUSIVEOREXP T_xor ANDEXP { $$ = new ;}
+               ;
+
+ANDEXP         : EQUALITYEXP {$$ = $1 ;}
+               | ANDREXP T_and EQUALITYEXP { $$ = new ;}
+               ;
+
+EQUALITYEXP    : RELATIONALEXP {$$ = $1 ;}
+               | EQUALITYEXP T_logical_equality RELATIONALEXP { $$ = new ;}
+               ;
+
+RELATIONALEXP  : SHIFTEXP {$$ = $1 ;}
+               | RELATIONALEXP T_rel_op SHIFTEXP { $$ = new ;}
+               ;
+
+SHIFTEXP       : ADDEXP {$$ = $1 ;}
+               | SHIFTEXP T_shift ADDEXP { $$ = new ;}
+               ;
+                
+ADDEXP         : MULTEXP {$$ = $1 ;}
+               | ADDEXP T_addsub_OP MULTEXP{ $$ = new ;}
+               ;
+
+MULTEXP        : UNARYEXP
+               | MULTEXP T_mult UNARYEXP
+               | MULTEXP T_div  UNARYEXP
+               | MULTEXP T_rem  UNARYEXP
+               ;
+
+UNARYEXP       : POSTFIXEXPRESSION {$$ = $1}
+               | T_inc_dec UNARYEXP
+               | T_sizeof UNARYEXP {$$ = $2}
+               | T_sizeof T_lrb TYPE  T_rrb 
+               ;
+
+UNARYOPS       : T_and       { $$ = $1; }
+               | T_addsub_OP { $$ = $1; }
+               | T_mult      { $$ = $1; }
+               | T_tilde     { $$ = $1; }
+               | T_not       { $$ = $1; }
+               ;
+
+
+
+
 
 INT : T_int {$$ = new Int();}
     ; 
