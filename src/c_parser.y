@@ -43,8 +43,8 @@ void yyerror(const char *);
 			T_rem T_tilde T_not T_dot T_arrow T_inc_dec T_addsub_OP T_assignment_op T_equal
 			T_sizeof T_int_const T_if T_while T_do T_for T_return		
 			T_void T_char T_short T_int T_long T_float T_double T_signed T_unsigned
-			T_typedef T_static T_auto T_register
-			T_const T_volatile T_goto T_break T_continue
+			T_typedef T_static 
+			T_volatile T_goto T_break T_continue
 			T_case T_default T_switch T_ellipsis T_stringliteral
 			
 %nonassoc		T_rrb
@@ -68,14 +68,58 @@ void yyerror(const char *);
 ROOT : TOP {g_root = $1; }
      ;
 
-TOP  : FUNCTION {$$ = new Top(); $$->addFunction($1);}
-     | TOP FUNCTION {$$->addFunction($2);}     
+TOP  : EXTERNAL {$$ = new Top(); $$->addFunction($1);}
+     | TOP EXTERNAL{$$->addFunction($2);}     
      ;
 
-FUNCTION : INT T_identifier T_lrb T_rrb T_lcb STATEMENT T_rcb {$$ = new Function($1,$2,$6,nullptr);}
+EXTERNAL : FUNCTION {$$ = $1;}
+         | DECLARATION {$$ = $1} /* global var ?*/
+         ;
+    
+FUNCTION : TYPE DECLARATOR COMPOUNDSTATEMENT {$$ = new Function($1,$2,$6,nullptr);}
          ;
 
-STATEMENT : T_return EXPR T_sc {$$ = new ReturnStatement($2,nullptr);}
+PARAMETERLIST : PARAMETER {$$ = $1}
+              | PARAMETERLIST T_comma PARAMETER  {$$ = ;}
+              ;
+
+PARAMETER     : TYPE DECLARATOR {$$ = new ;}
+              ;
+
+DECLARATOR    : T_identifier {$$ = new ;}
+              | T_identifier T_lsb T_rsb {$$ = new ;}
+              | T_lrb DECLARATOR T_rrb   {$$ = new ;}
+              | DECLARATOR T_lrb T_rrb   {$$ = new ;}
+              ;
+
+TYPE     : T_void            {$$ = new ;}
+         | T_int             {$$ = new ;}
+         | T_char            {$$ = new ;}
+         | T_short           {$$ = new ;}
+         | T_long            {$$ = new ;}
+         | T_float           {$$ = new ;}
+         | T_double          {$$ = new ;}
+         | T_signed          {$$ = new ;}
+         | T_unsigned        {$$ = new ;}
+         | T_typedef         {$$ = new ;}
+         | T_long TYPE       {$$ = new ;}
+         | T_unsigned TYPE   {$$ = new ;}
+         ;
+
+COMPOUNDSTATEMENT : T_lcb COMPOUNDSTATEMENT2 {$$ = $2;}
+                  ;
+
+COMPOUNDSTATEMENT2 : T_rcb {$$ = new CompoundStatement();}
+                   | STATEMENTLIST T_rcb {$$ = new CompoundStatement($1);}
+                   ;
+
+STATEMENTLIST     : STATEMENT               {$$ = $1}
+                  | STATEMENTLIST STATEMENT {$2 = ;}
+                  ;
+
+STATEMENT : COMPOUNDSTATEMENT {$$ = $1}
+          |
+          |
           ;
 
 EXPR      : T_int_const {$$ = new NumberConstant($1);}

@@ -33,3 +33,13 @@ Changelog
     * In previous years, students were additionally required to submit a set of testcases. This deliverable has been removed; instead, a large collection of testcases has been provided for you, as this was judged to be more useful.
 
     * In previous years, the compiler component counted for 42.8% of the module; it now counts for 55%. It was felt that this weighting more accurately reflects the effort that students put in to building a working compiler.
+
+
+
+Doombar comments
+=========
+
+inspiration for the AST was taken from : 
+https://www.lysator.liu.se/c/ANSI-C-grammar-y.html
+
+We used TOP, as 
