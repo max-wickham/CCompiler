@@ -40,7 +40,7 @@ void yyerror(const char *);
 
       T_identifier T_sc T_comma T_lrb T_lcb T_rcb T_lsb T_rsb T_qm T_colon T_logical_or
 			T_logical_and T_or T_xor T_and T_logical_equality T_logical_inequality T_rel_op T_shift T_mult T_div
-			T_rem T_tilde T_not T_dot T_arrow T_inc_dec T_addsub_OP T_assignment_op T_equal
+			T_rem T_tilde T_not T_dot T_arrow T_inc T_dec T_add T_sub T_assignment_op T_equal
 			T_sizeof T_int_const T_if T_while T_do T_for T_return		
 			T_void T_char T_short T_int T_long T_float T_double T_signed T_unsigned
 			T_typedef T_static 
@@ -76,15 +76,14 @@ EXTERNAL : FUNCTION {$$ = $1;}
          | DECLARATION {$$ = $1} /* global var ?*/
          ;
     
-FUNCTION : TYPE DECLARATOR COMPOUNDSTATEMENT {$$ = new Function($1,$2,$6,nullptr);}
+FUNCTION : TYPE DECLARATOR PARAMETER STATEMENT {$$ = new Function($1,$2,$6,nullptr);}
          ;
 
-PARAMETERLIST : PARAMETER {$$ = $1}
-              | PARAMETERLIST T_comma PARAMETER  {$$ = ;}
+PARAMETER     : TYPE DECLARATOR T_rrb             {$$ = new ;}
+              | TYPE DECLARATOR T_comma PARAMETER {$$ = new ;}
+              | T_lrb PARAMETER                   {$$ = $2;}
               ;
 
-PARAMETER     : TYPE DECLARATOR {$$ = new ;}
-              ;
 
 DECLARATOR    : T_identifier {$$ = new ;}
               | T_identifier T_lsb T_rsb {$$ = new ;}
@@ -106,35 +105,26 @@ TYPE     : T_void            {$$ = new ;}
          | T_unsigned TYPE   {$$ = new ;}
          ;
 
-COMPOUNDSTATEMENT : T_lcb COMPOUNDSTATEMENT2 {$$ = $2;}
-                  ;
-
-COMPOUNDSTATEMENT2 : T_rcb {$$ = new CompoundStatement();}
-                   | STATEMENTLIST T_rcb {$$ = new CompoundStatement($1);}
-                   ;
-
-STATEMENTLIST     : STATEMENT               {$$ = $1}
-                  | STATEMENTLIST STATEMENT {$$ = ;}
-                  ;
-
-STATEMENT : COMPOUNDSTATEMENT   {$$ = $1}
-          | ITERATIONSTATEMENT  {$$ = $1}
-          | SELECTIONSTATEMENT  {$$ = $1}
-          | EXPRESSIONSTATEMENT {$$ = $1}
+STATEMENT : COMPOUNDSTATEMENT   {$$ = $1;}
+          | ITERATIONSTATEMENT  {$$ = $1;}
+          | SELECTIONSTATEMENT  {$$ = $1;}
+          | EXPRESSIONSTATEMENT {$$ = $1;}
+          | T_rcb               {$$ = nullptr;}
+          | T_lcb STATEMENT     {$$ = $2;}
           ;
 
 EXPRESSIONSTATEMENT : T_sc           {$$ = new ;}
-                    | EXPRESSION T_sc {$$ = }
+                    | EXPRESSIONSTATEMENT T_sc STATEMENT {$$ = new ExpressionStatement($1,$3)}
                     ;
 
-SELECTIONSTATEMENT  : T_if T_lrb EXPRESSION T_rrb STATEMENT {$$ = new IfElseStatement($5);}
-                    | T_if T_lrb EXPRESSION T_rrb Statement T_else Statement {$$ = new IfElseStatement($5,$7);}
-                    | T_switch T_lrb EXPRESSION T_rrb STATEMENT {$$ = new SwitchStatement($5);}
+SELECTIONSTATEMENT  : T_if T_lrb EXPRESSION T_rrb STATEMENT STATEMENT                   {$$ = new IfElseStatement($3,$5,$6);}            
+                    | T_if T_lrb EXPRESSION T_rrb STATEMENT T_else STATEMENT STATEMENT           {$$ = new IfElseStatement($5,$7);}
+                    | T_switch T_lrb EXPRESSION T_rrb STATEMENT STATEMENT  {$$ = new SwitchStatement($5);}
                     ;
 
-ITERATIONSTATEMENT  : T_while T_lrb EXPRESSION T_rrb STATEMENT {$$ = new ;}
-                    | T_do STATEMENT T_while T_lrb EXPRESSION T_rrb T_sc {$$ = new ;}
-                    | T_for T_lrb EXPRESSION T_sc EXPRESSION T_sc EXPRESSION T_rrb STATEMENT {$$ = new ;}
+ITERATIONSTATEMENT  : T_while T_lrb EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ;}
+                    | T_do STATEMENT T_while T_lrb EXPRESSION T_rrb T_sc STATEMENT {$$ = new ;}
+                    | T_for T_lrb EXPRESSION T_sc EXPRESSION T_sc EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ;}
                     ;
 
 EXPRESSION :
@@ -187,7 +177,8 @@ SHIFTEXP       : ADDEXP {$$ = $1 ;}
                ;
                 
 ADDEXP         : MULTEXP {$$ = $1 ;}
-               | ADDEXP T_addsub_OP MULTEXP{ $$ = new ;}
+               | ADDEXP T_addsub_OP MULTEXP{ $$ = new AdditionOperator(ADD) ;}
+               | ADDEXP T_addsub_OP MULTEXP{ $$ = new AdditionOperator(ADD) ;}
                ;
 
 MULTEXP        : UNARYEXP
@@ -214,19 +205,24 @@ POSTFIXEXP     : PRIMARYEXP { $$ = $1; }
                | POSTFIXEXP T_lrb POSTFIXEXP2 {$$ = new ;}
                | POSTFIXEXP T_dot T_identifier {$$ = $1 ;}
                | POSTFIXEXP T_arrow T_identifier {$$ = $1;}
-               | POSTFIXEXP T_inc_dec {}
+               | POSTFIXEXP T_inc {$$ = new IncOperator($1)} 
+               | POSTFIXEXP T_dec {$$ = new DecOperator($1) }   
                ;
 
-POSTFIXEXP2    : T_rrb 
+ARGUMENT       : EXPRESSION T_rrb {$$ = new Parameter($1,nullptr);}
+               | EXPRESSION ARGUMENT T_rrb {$$ = new Parameter($1,$2);}
                ;
 
-PRIMARYEXP     : T_identifier {}
-               | CONSTANT
-               | T_stringliteral
-               | T_lrb EXPRESSION T_rrb
+POSTFIXEXP2    : T_rrb {$$ = $1}
                ;
 
-CONSTANT       : T_int_const {$$ = new ;}
+PRIMARYEXP     : T_identifier {}        {$$ = new Variable($1); }
+               | CONSTANT               {$$ = $1;}
+               | T_stringliteral        {$$ = new StringConstant($1) ; }
+               | T_lrb EXPRESSION T_rrb {$$ = $2;}
+               ;
+
+CONSTANT       : T_int_const {$$ = new NumberConstant($1);}
                ;
 
 
