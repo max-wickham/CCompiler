@@ -73,36 +73,28 @@ TOP  : EXTERNAL {$$ = new Top(); $$->addFunction($1);}
      ;
 
 EXTERNAL : FUNCTION {$$ = $1;}
-         | DECLARATION {$$ = $1} /* global var ?*/
+         | DECLARATION {$$ = $1}
          ;
     
-FUNCTION : TYPE DECLARATOR PARAMETER STATEMENT {$$ = new Function($1,$2,$6,nullptr);}
+FUNCTION : TYPE T_identifier PARAMETER STATEMENT {$$ = new Function($1,$2,$6,nullptr);}
          ;
 
-PARAMETER     : TYPE DECLARATOR T_rrb             {$$ = new ;}
-              | TYPE DECLARATOR T_comma PARAMETER {$$ = new ;}
-              | T_lrb PARAMETER                   {$$ = $2;}
+PARAMETER     : TYPE T_identifier T_rrb             {$$ = ParameterDefinition(new Decleration($1,$2),nullptr) ;}
+              | TYPE T_identifier T_comma PARAMETER {$$ =  ParameterDefinition(new Decleration($1,$2),$4);}
+              | T_lrb PARAMETER                     {$$ = $2;}
               ;
 
-
-DECLARATOR    : T_identifier {$$ = new ;}
-              | T_identifier T_lsb T_rsb {$$ = new ;}
-              | T_lrb DECLARATOR T_rrb   {$$ = new ;}
-              | DECLARATOR T_lrb T_rrb   {$$ = new ;}
-              ;
-
-TYPE     : T_void            {$$ = new ;}
-         | T_int             {$$ = new ;}
-         | T_char            {$$ = new ;}
-         | T_short           {$$ = new ;}
-         | T_long            {$$ = new ;}
-         | T_float           {$$ = new ;}
-         | T_double          {$$ = new ;}
-         | T_signed          {$$ = new ;}
-         | T_unsigned        {$$ = new ;}
-         | T_typedef         {$$ = new ;}
-         | T_long TYPE       {$$ = new ;}
-         | T_unsigned TYPE   {$$ = new ;}
+TYPE     : T_void            {$$ = $1  ;}
+         | T_int             {$$ = new Int() ;}
+         | T_char            {$$ = new Char();}
+         | T_short           {$$ = $1 ;}
+         | T_long            {$$ = $1 ;}
+         | T_float           {$$ = new Float() ;}
+         | T_double          {$$ = $1 ;}
+         | T_typedef         {$$ = $1 ;}
+         | T_long TYPE       {$$ = $1 ;}
+         | T_unsigned TYPE   {$$ = $2 ; $2->setUnSigned()}
+         | T_signed TYPE     {$$ = $2}
          ;
 
 STATEMENT : COMPOUNDSTATEMENT   {$$ = $1;}
@@ -122,17 +114,46 @@ SELECTIONSTATEMENT  : T_if T_lrb EXPRESSION T_rrb STATEMENT STATEMENT           
                     | T_switch T_lrb EXPRESSION T_rrb STATEMENT STATEMENT               {$$ = new SwitchStatement($5);}
                     ;
 
-ITERATIONSTATEMENT  : T_while T_lrb EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ;}
-                    | T_do STATEMENT T_while T_lrb EXPRESSION T_rrb T_sc STATEMENT {$$ = new ;}
-                    | T_for T_lrb EXPRESSION T_sc EXPRESSION T_sc EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ;}
+ITERATIONSTATEMENT  : T_while T_lrb EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new WhileLoopStatement($3,$5,$6) ;}
+                    | T_do STATEMENT T_while T_lrb EXPRESSION T_rrb T_sc STATEMENT {$$ = new DoWhileLoopStatement($5,$2,$8);}
+                    | T_for T_lrb EXPRESSION T_sc EXPRESSION T_sc EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ForLoopStatement($3,$4,$5,$7,$8);}
                     ;
 
-EXPRESSION :
+ASSIGNEXPRESSION :
            | UNARYEXP ASSIGN_OP ASSIGNMENT {  
              if(*%2 == "="){
-               $$ = new AssignExpression($1,$3);
+               $$ = new AssignmentOperator($1,$3);
              }
-             if()
+             elseif(*$2 == "+="){
+               {$$ = new AssignmentOperator($1,new AdditionOperator($1,$3));}
+             }
+             elseif(*$2 == "-="){
+               {$$ = new AssignmentOperator($1,new SubtractionOperator($1,%3));}
+             }
+             elseif(*$2 == "/="){
+               {$$ = new AssignmentOperator($1,new DivisionOperator($1,%3));}
+             }
+             elseif(*$2 == "%="){
+               {$$ = new AssignmentOperator($1,new ModuloOperator($1,%3));}
+             } 
+             elseif(*$2 == "&="){
+               {$$ = new AssignmentOperator($1,new BitwiseAndOperator($1,%3));}
+             }
+             elseif(*$2 == "^="){
+               {$$ = new AssignmentOperator($1,new BitwiseXOROperator($1,%3));}
+             }
+             elseif(*$2 == "|="){
+               {$$ = new AssignmentOperator($1,new BitwiseOrOperator($1,%3));}
+             }
+             elseif(*$2 == "<<="){
+               {$$ = new AssignmentOperator($1,new ShiftLeftOperator($1,%3));}
+             }
+             elseif(*$2 == ">>="){
+               {$$ = new AssignmentOperator($1,new ShiftRightOperator($1,%3));}
+             }
+             else{
+               
+             }
            }
 
 ASSIGN_OP   :	T_assignment_op { ; }
@@ -221,11 +242,6 @@ PRIMARYEXP     : T_identifier {}        {$$ = new Variable($1);}
 
 CONSTANT       : T_int_const {$$ = new NumberConstant($1);}
                ;
-
-
-
-INT : T_int {$$ = new Int();}
-    ; 
 
  
 %%
