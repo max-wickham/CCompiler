@@ -39,7 +39,7 @@ void yyerror(const char *);
  /*https://www.lysator.liu.se/c/ANSI-C-grammar-y.html USEFUL ! */
 
       T_identifier T_sc T_comma T_lrb T_lcb T_rcb T_lsb T_rsb T_qm T_colon T_logical_or
-			T_logical_and T_or T_xor T_and T_logical_equality T_logical_inequality T_greaterthanequal_op T_lessthanequal_op T_greaterthan_op T_lessthan_op;   T_shift T_mult T_div
+			T_logical_and T_or T_xor T_and T_logical_equality T_logical_inequality T_greaterthanequal_op T_lessthanequal_op T_greaterthan_op T_lessthan_op T_shift T_mult T_div
 			T_rem T_tilde T_not T_dot T_arrow T_inc T_dec T_add T_sub T_assignment_op T_equal
 			T_sizeof T_int_const T_if T_while T_do T_for T_return		
 			T_void T_char T_short T_int T_long T_float T_double T_signed T_unsigned
@@ -52,12 +52,28 @@ void yyerror(const char *);
 			
 
 %type <top> TOP
-%type <number> T_int_const
-%type <string> T_return T_sc T_lcb T_rcb T_lrb T_rrb T_identifier 
-%type <statement> STATEMENT 
-%type <expression> EXPR
+
+%type <statement> STATEMENT SELECTIONSTATEMENT ITERATIONSTATEMENT EXPRESSIONSTATEMENT 
+
+%type <type>     TYPE
+
+%type<declaration> PARAMETER
+
+%type <expression> EXPRESSION CONSTANT PRIMARYEXP ARGUMENT POSTFIXEXP UNARYEXP MULTEXP ADDEXP 
+                   SHIFTEXP EQUALITYEXP RELATIONALEXP ANDEXP  EXCLUSIVEOREXP 
+                   INCLUSIVEOREXP LOGICALANDEXP LOGICALOREXP CONDEXP ASSIGNEXPRESSION  
+
+%type	<string>	T_identifier ASSIGN_OP T_assignment_op T_equal T_and T_add T_sub T_tilde T_not
+			          T_mult T_div T_rem T_logical_equality T_logical_inequality T_greaterthanequal_op 
+                T_lessthanequal_op T_greaterthan_op T_lessthan_op T_shift T_inc T_dec T_stringliteral  
+                T_rsb T_lsb T_rrb T_lrb T_sizeof T_logical_and  T_logical_or T_qm T_colon T_sc T_long  
+                T_typedef T_double  T_short T_void T_const
+
+                  
 %type <function> FUNCTION
-%type <intt> INT
+
+
+%type	<number>   T_int_const
 
 
 %start ROOT
@@ -68,15 +84,13 @@ void yyerror(const char *);
 ROOT : TOP {g_root = $1; }
      ;
 
-TOP  : EXTERNAL {$$ = new Top(); $$->addFunction($1);}
-     | TOP EXTERNAL{$$->addFunction($2);}     
+TOP  : FUNCTION {$$ = new Top(); $$->addFunction($1);}
+     | TOP FUNCTION{$$->addFunction($2);}    
+     | TYPE T_identifier {$$ = new Top(); $$->addGlobalVariable( new Decleration($1,$2));}
+     | TOP TYPE T_identifier{$$->addGlobalVariable(new Decleration($1,$2));}
      ;
-
-EXTERNAL : FUNCTION {$$ = $1;}
-         | DECLARATION {$$ = $1}
-         ;
     
-FUNCTION : TYPE T_identifier PARAMETER STATEMENT {$$ = new Function($1,$2,$6,nullptr);}
+FUNCTION : TYPE T_identifier PARAMETER STATEMENT {$$ = new Function(new Decleration($1,$2),$3,$4,nullptr);}
          ;
 
 PARAMETER     : TYPE T_identifier T_rrb             {$$ = ParameterDefinition(new Decleration($1,$2),nullptr) ;}
@@ -97,16 +111,14 @@ TYPE     : T_void            {$$ = $1  ;}
          | T_signed TYPE     {$$ = $2}
          ;
 
-STATEMENT : COMPOUNDSTATEMENT   {$$ = $1;}
-          | ITERATIONSTATEMENT  {$$ = $1;}
+STATEMENT : ITERATIONSTATEMENT  {$$ = $1;}
           | SELECTIONSTATEMENT  {$$ = $1;}
           | EXPRESSIONSTATEMENT {$$ = $1;}
           | T_rcb               {$$ = nullptr;}
           | T_lcb STATEMENT     {$$ = $2;}
           ;
 
-EXPRESSIONSTATEMENT : T_sc                               {$$ = $1;}
-                    | EXPRESSIONSTATEMENT T_sc STATEMENT {$$ = new ExpressionStatement($1,$3);}
+EXPRESSIONSTATEMENT : EXPRESSION T_sc STATEMENT {$$ = new ExpressionStatement($1,$3);}
                     ;
 
 SELECTIONSTATEMENT  : T_if T_lrb EXPRESSION T_rrb STATEMENT STATEMENT                   {$$ = new IfElseStatement($3,$5,$6);}            
@@ -119,8 +131,12 @@ ITERATIONSTATEMENT  : T_while T_lrb EXPRESSION T_rrb STATEMENT STATEMENT {$$ = n
                     | T_for T_lrb EXPRESSION T_sc EXPRESSION T_sc EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ForLoopStatement($3,$4,$5,$7,$8);}
                     ;
 
-ASSIGNEXPRESSION :
-           | UNARYEXP ASSIGN_OP ASSIGNMENT {  
+EXPRESSION : ASSIGNEXPRESSION {$$ = $1}
+           ;
+
+
+ASSIGNEXPRESSION : CONDEXP {$$ = $1;}
+           | UNARYEXP ASSIGN_OP ASSIGNEXPRESSION {  
              if(*%2 == "="){
                $$ = new AssignmentOperator($1,$3);
              }
@@ -157,17 +173,17 @@ ASSIGNEXPRESSION :
            }
 
 ASSIGN_OP   :	T_assignment_op { ; }
-	          |	T_eq { ; }
+	          |	T_equal { ; }
 	          ;
 
 CONDEXP    : LOGICALOREXP {$$ = $1;}
-           | LOGICALEXP T_qm EXPRESSION T_colon CONDEXP {$$ = new TernaryOperator($1,$3,$5);}
+           | LOGICALOREXP T_qm EXPRESSION T_colon CONDEXP {$$ = new TernaryOperator($1,$3,$5);}
            ;
 
   /* here we add the precdents of ops */
 
 LOGICALOREXP  : LOGICALANDEXP {$$ = $1 ;}
-              | LOGICALOREXP T_logical_or LOGICALAND {$$ = new LogicalAndOperator($1,$3) ;}
+              | LOGICALOREXP T_logical_or LOGICALANDEXP {$$ = new LogicalAndOperator($1,$3) ;}
               ;
 
 LOGICALANDEXP : INCLUSIVEOREXP {$$ = $1 ;}
@@ -183,7 +199,7 @@ EXCLUSIVEOREXP : ANDEXP {$$ = $1 ;}
                ;
 
 ANDEXP         : EQUALITYEXP {$$ = $1 ;}
-               | ANDREXP T_and EQUALITYEXP { $$ = new LogicalAndOperator($1,$3) ;}
+               | ANDEXP T_and EQUALITYEXP { $$ = new LogicalAndOperator($1,$3) ;}
                ;
 
 EQUALITYEXP    : RELATIONALEXP {$$ = $1 ;}

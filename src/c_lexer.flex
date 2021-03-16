@@ -40,15 +40,12 @@ ALL .
 (unsigned)	{ return T_unsigned; }
 
    /* storage classes */ 
-(auto)      {return T_auto;}
-(register)  {return T_register;}
-(static)    {return T_static;}
+   /*(auto)      {return T_auto;}*/
+
 (typedef)   { return T_typedef; }
 
    /* Type qualifiers */
-(const)     {return T_const;}
-(volatile) {return T_volatile;}
-
+ /*(const)     {return T_const;}*/
  /*control flow statements */
 (continue)	{ return T_continue; }
 (break)		{ return T_break; }
@@ -88,7 +85,6 @@ ALL .
 [&]		{ yylval.string = new std::string(yytext); return T_and; }
 [=][=]		{ yylval.string = new std::string(yytext); return T_logical_equality; }
 [!][=]		{ yylval.string = new std::string(yytext); return T_logical_inequality; }
-([<>][=])|[<>]	{ yylval.string = new std::string(yytext); return T_rel_op; }
 [>=]    { yylval.string = new std::string(yytext); return T_greaterthanequal_op; }
 [<=]    { yylval.string = new std::string(yytext); return T_lessthanequal_op; }
 [>]     { yylval.string = new std::string(yytext); return T_greaterthan_op; }
