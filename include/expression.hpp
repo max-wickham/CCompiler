@@ -110,7 +110,13 @@ class EqualityOperator: public BinaryOperatorExpression{
     void printASM(Bindings *bindings);
 };
 
-class InequalityOperator: public BinaryOperatorExpression{
+class LessThanOperator: public BinaryOperatorExpression{
+    public:
+    using BinaryOperatorExpression::BinaryOperatorExpression;
+    void printASM(Bindings *bindings);
+};
+
+class LessThanEqualOperator: public BinaryOperatorExpression{
     public:
     using BinaryOperatorExpression::BinaryOperatorExpression;
     void printASM(Bindings *bindings);
@@ -152,6 +158,18 @@ class BitwiseXorOperator: public BinaryOperatorExpression{
     void printASM(Bindings *bindings);
 };
 
+class ShiftLeftOperator: public BinaryOperatorExpression{
+    public:
+    using BinaryOperatorExpression::BinaryOperatorExpression;
+    void printASM(Bindings *bindings);
+};
+
+class ShiftRightOperator: public BinaryOperatorExpression{
+    public:
+    using BinaryOperatorExpression::BinaryOperatorExpression;
+    void printASM(Bindings *bindings);
+};
+
 class UnaryOperatorExpression: public Expression{
     protected:
     Expression *expression;
@@ -182,6 +200,22 @@ class NotOperator: public UnaryOperatorExpression{
 class BitwiseNotOperator: public UnaryOperatorExpression{
     public:
     using UnaryOperatorExpression::UnaryOperatorExpression;
+    void printASM(Bindings *bindings);
+};
+//TODO
+class SizeOfOperator: public UnaryOperatorExpression{
+    public:
+    using UnaryOperatorExpression::UnaryOperatorExpression;
+    void printASM(Bindings *bindings);
+};
+//TODO
+class TernaryOperator{
+    protected:
+    Expression* expressionOne;
+    Expression* expressionTwo;
+    Expression* expressionThree;
+    public:
+    TernaryOperator(Expression* expressionOne, Expression* expressionTwo, Expression* expressionThree);
     void printASM(Bindings *bindings);
 };
 

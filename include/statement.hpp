@@ -62,6 +62,14 @@ class WhileLoopStatement: public Statement{
     WhileLoopStatement(Expression *condition, Statement *statement, Statement *nextStatement);
     void printASM(Bindings* bindings) override;
 };
+//TODO
+class DoWhileLoopStatement: public Statement{
+    protected:
+    Expression *condition;
+    Statement *statement;
+    DoWhileLoopStatement(Expression *condition, Statement *statement, Statement *nextStatement);
+    void printASM(Bindings* bindings) override;
+};
 
 class ExpressionStatement: public Statement{
     protected:

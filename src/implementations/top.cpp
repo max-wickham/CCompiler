@@ -9,12 +9,11 @@
 Top::Top(){}
 
 void Top::printASM(){
-    Bindings *bindings = new Bindings();
     for(Function * function: functions){
-       function->printASM(bindings);
+        Bindings *bindings = new Bindings();
+        function->printASM(bindings);
+        delete bindings;
     }
-    delete bindings;
-    //std::cout << "hello" << std::endl;
 }
 
 void Top::addFunction(Function *function){

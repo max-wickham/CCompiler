@@ -15,7 +15,7 @@ class Function: public Node{
     Statement *statement;
     ParameterDefinition *firstParameter;
     public:
-    Function(Type *type, std::string* id, Statement* statement,
+    Function(Decleration *decleration, Statement* statement,
         ParameterDefinition *firstParameter);
     void printASM(Bindings *bindings);
 };

@@ -11,6 +11,10 @@ struct ReturnRegisters{
 	bool a1 = false;
 	bool a2 = false;
 	bool a3 = false;
+	bool f12 = false;
+	bool f13 = false;
+	bool f14 = false;
+	bool f15 = false;
 	int currentMemOffset = 0;
 };
 
@@ -18,35 +22,49 @@ enum RegisterType{
 	leftReg,
 	rightReg,
 	evaluateReg,
-	returnReg
+	returnReg,
+	zeroReg
 };
 
 class Type : public Node
 {
 protected:
-	bool _signed;
-	bool _extern;
-	bool _static;
-	bool _const;
+	bool _signed = true;
 public:
+	bool isSigned();
+
+	void setUnSigned();
+
 	virtual int getSize() = 0;
+
 	virtual std::string getName() = 0;
+
 	virtual void loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings) = 0;
+
 	virtual void evaluateReturn(Bindings *bindings) = 0;
+
 	virtual void processReturn(Bindings *bindings) = 0;
-	// //places the value at the top of the stack into the register
+
+	//places the value at the top of the stack into the register
 	virtual void placeInRegister(Bindings *bindings, RegisterType type) = 0;
-	// //places the value in the register at the top of the stack
+
+	//places the value in the register at the top of the stack
 	virtual void extractFromRegister(Bindings *bindings, RegisterType type) = 0;
-	// //gets the register string from a register type
+
+	//gets the register string from a register type
 	virtual std::string getRegister(RegisterType type) = 0;
+
 	virtual void saveVariable(Bindings *bindings, std::string id) = 0;
+
 	virtual void placeVariableOnStack(Bindings *bindings, std::string id) = 0;
+
 	virtual void placeVariableOnStack(Bindings *bindings) = 0;
+
+	virtual void beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::string label) = 0;
 };
 
 class OperandType : public Type {
-	public:
+public:
 	//TODO
 	virtual std::string getAdditionOperator() = 0;
 	//TODO
@@ -62,24 +80,58 @@ class OperandType : public Type {
 };
 
 class IntegralType : public OperandType {
-	public:
+public:
 	virtual void extractFromRegister(Bindings *bindings, RegisterType type) = 0;
+
 	virtual void saveVariable(Bindings *bindings, std::string id) = 0;
+
 	virtual void placeVariableOnStack(Bindings *bindings, std::string id) = 0;
-	//TODO
+
+	std::string getAdditionOperator();
+
+	std::string getSubtractionOperator();
+
+	std::string getMultiplicationOperator();
+
+	std::string getDivisionOperator();
+
+	void extractFromMultRegister(Bindings *bindings);
+
+	void extractFromDivRegister(Bindings *bindings);
+
 	void extractFromModuloRegister(Bindings *bindings);
 	//TODO
-	std::string getAdditionOperator();
-	//TODO
-	std::string getSubtractionOperator();
-	//TODO
-	std::string getMultiplicationOperator();
-	//TODO
-	std::string getDivisionOperator();
-	//TODO
-	void extractFromMultRegister(Bindings *bindings);
-	//TODO
-	void extractFromDivRegister(Bindings *bindings);
+	void beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::string label) override;
+};
+
+class Char : public IntegralType {
+protected:
+	const int size = 4;
+public:
+
+	Char();
+
+	int getSize() override;
+
+	std::string getName() override;
+
+	void loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings) override;
+
+	void evaluateReturn(Bindings *bindings) override;
+
+	void processReturn(Bindings *bindings) override;
+
+	void placeInRegister(Bindings *bindings, RegisterType type) override;
+
+	void extractFromRegister(Bindings *bindings, RegisterType type) override;
+
+	void saveVariable(Bindings *bindings, std::string id) override;
+
+	void placeVariableOnStack(Bindings *bindings, std::string id) override;
+
+	void placeVariableOnStack(Bindings *bindings) override;
+
+	std::string getRegister(RegisterType type) override;
 };
 
 class Int : public IntegralType { 
@@ -87,16 +139,27 @@ protected:
 	const int size = 4;
 public:
 	Int();
+
 	int getSize() override;
+
 	std::string getName() override;
+
 	void loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings) override;
+
 	void evaluateReturn(Bindings *bindings) override;
+
 	void processReturn(Bindings *bindings) override;
+
 	void placeInRegister(Bindings *bindings, RegisterType type) override;
+
 	void extractFromRegister(Bindings *bindings, RegisterType type);
+
 	std::string getRegister(RegisterType type) override;
+	
 	void saveVariable(Bindings *bindings, std::string id);
+
 	void placeVariableOnStack(Bindings *bindings, std::string id);
+
 	void placeVariableOnStack(Bindings *bindings);
 };
 
@@ -106,7 +169,51 @@ protected:
 	std::string id;
 public:
 	Pointer(Type *type);
+
 	void defreference(Bindings *bindings);
+};
+
+class Float : public OperandType {
+protected:
+	const int size = 4;
+public:
+	Float();
+
+	int getSize() override;
+
+	std::string getName() override;
+
+	void loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings) override;
+
+	void evaluateReturn(Bindings *bindings) override;
+
+	void processReturn(Bindings *bindings) override;
+
+	void placeInRegister(Bindings *bindings, RegisterType type) override;
+
+	void extractFromRegister(Bindings *bindings, RegisterType type) override;
+
+	std::string getRegister(RegisterType type) override;
+
+	void saveVariable(Bindings *bindings, std::string id) override;
+
+	void placeVariableOnStack(Bindings *bindings, std::string id) override;
+
+	void placeVariableOnStack(Bindings *bindings) override;
+
+	std::string getAdditionOperator() override;
+
+	std::string getSubtractionOperator() override;
+
+	std::string getMultiplicationOperator() override;
+
+	std::string getDivisionOperator() override;
+
+	void extractFromMultRegister(Bindings *bindings) override;
+
+	void extractFromDivRegister(Bindings *bindings) override;
+	//TODO
+	void beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::string label);
 };
 
  #endif
