@@ -39,12 +39,12 @@ void yyerror(const char *);
  /*https://www.lysator.liu.se/c/ANSI-C-grammar-y.html USEFUL ! */
 
       T_identifier T_sc T_comma T_lrb T_lcb T_rcb T_lsb T_rsb T_qm T_colon T_logical_or
-			T_logical_and T_or T_xor T_and T_logical_equality T_logical_inequality T_rel_op T_shift T_mult T_div
-			T_rem T_tilde T_not T_dot T_arrow T_inc_dec T_addsub_OP T_assignment_op T_equal
+			T_logical_and T_or T_xor T_and T_logical_equality T_logical_inequality T_greaterthanequal_op T_lessthanequal_op T_greaterthan_op T_lessthan_op;   T_shift T_mult T_div
+			T_rem T_tilde T_not T_dot T_arrow T_inc T_dec T_add T_sub T_assignment_op T_equal
 			T_sizeof T_int_const T_if T_while T_do T_for T_return		
 			T_void T_char T_short T_int T_long T_float T_double T_signed T_unsigned
-			T_typedef T_static T_auto T_register
-			T_const T_volatile T_goto T_break T_continue
+			T_typedef T_static 
+			T_volatile T_goto T_break T_continue
 			T_case T_default T_switch T_ellipsis T_stringliteral
 			
 %nonassoc		T_rrb
@@ -68,21 +68,164 @@ void yyerror(const char *);
 ROOT : TOP {g_root = $1; }
      ;
 
-TOP  : FUNCTION {$$ = new Top(); $$->addFunction($1);}
-     | TOP FUNCTION {$$->addFunction($2);}     
+TOP  : EXTERNAL {$$ = new Top(); $$->addFunction($1);}
+     | TOP EXTERNAL{$$->addFunction($2);}     
      ;
 
-FUNCTION : INT T_identifier T_lrb T_rrb T_lcb STATEMENT T_rcb {$$ = new Function($1,$2,$6,nullptr);}
+EXTERNAL : FUNCTION {$$ = $1;}
+         | DECLARATION {$$ = $1} /* global var ?*/
+         ;
+    
+FUNCTION : TYPE DECLARATOR PARAMETER STATEMENT {$$ = new Function($1,$2,$6,nullptr);}
          ;
 
-STATEMENT : T_return EXPR T_sc {$$ = new ReturnStatement($2,nullptr);}
+PARAMETER     : TYPE DECLARATOR T_rrb             {$$ = new ;}
+              | TYPE DECLARATOR T_comma PARAMETER {$$ = new ;}
+              | T_lrb PARAMETER                   {$$ = $2;}
+              ;
+
+
+DECLARATOR    : T_identifier {$$ = new ;}
+              | T_identifier T_lsb T_rsb {$$ = new ;}
+              | T_lrb DECLARATOR T_rrb   {$$ = new ;}
+              | DECLARATOR T_lrb T_rrb   {$$ = new ;}
+              ;
+
+TYPE     : T_void            {$$ = new ;}
+         | T_int             {$$ = new ;}
+         | T_char            {$$ = new ;}
+         | T_short           {$$ = new ;}
+         | T_long            {$$ = new ;}
+         | T_float           {$$ = new ;}
+         | T_double          {$$ = new ;}
+         | T_signed          {$$ = new ;}
+         | T_unsigned        {$$ = new ;}
+         | T_typedef         {$$ = new ;}
+         | T_long TYPE       {$$ = new ;}
+         | T_unsigned TYPE   {$$ = new ;}
+         ;
+
+STATEMENT : COMPOUNDSTATEMENT   {$$ = $1;}
+          | ITERATIONSTATEMENT  {$$ = $1;}
+          | SELECTIONSTATEMENT  {$$ = $1;}
+          | EXPRESSIONSTATEMENT {$$ = $1;}
+          | T_rcb               {$$ = nullptr;}
+          | T_lcb STATEMENT     {$$ = $2;}
           ;
 
-EXPR      : T_int_const {$$ = new NumberConstant($1);}
-          ;
+EXPRESSIONSTATEMENT : T_sc                               {$$ = $1;}
+                    | EXPRESSIONSTATEMENT T_sc STATEMENT {$$ = new ExpressionStatement($1,$3);}
+                    ;
+
+SELECTIONSTATEMENT  : T_if T_lrb EXPRESSION T_rrb STATEMENT STATEMENT                   {$$ = new IfElseStatement($3,$5,$6);}            
+                    | T_if T_lrb EXPRESSION T_rrb STATEMENT T_else STATEMENT STATEMENT  {$$ = new IfElseStatement($5,$7);}
+                    | T_switch T_lrb EXPRESSION T_rrb STATEMENT STATEMENT               {$$ = new SwitchStatement($5);}
+                    ;
+
+ITERATIONSTATEMENT  : T_while T_lrb EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ;}
+                    | T_do STATEMENT T_while T_lrb EXPRESSION T_rrb T_sc STATEMENT {$$ = new ;}
+                    | T_for T_lrb EXPRESSION T_sc EXPRESSION T_sc EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ;}
+                    ;
+
+EXPRESSION :
+           | UNARYEXP ASSIGN_OP ASSIGNMENT {  
+             if(*%2 == "="){
+               $$ = new AssignExpression($1,$3);
+             }
+             if()
+           }
+
+ASSIGN_OP   :	T_assignment_op { ; }
+	          |	T_eq { ; }
+	          ;
+
+CONDEXP    : LOGICALOREXP {$$ = $1;}
+           | LOGICALEXP T_qm EXPRESSION T_colon CONDEXP {$$ = new TernaryOperator($1,$3,$5);}
+           ;
+
+  /* here we add the precdents of ops */
+
+LOGICALOREXP  : LOGICALANDEXP {$$ = $1 ;}
+              | LOGICALOREXP T_logical_or LOGICALAND {$$ = new LogicalAndOperator($1,$3) ;}
+              ;
+
+LOGICALANDEXP : INCLUSIVEOREXP {$$ = $1 ;}
+              | LOGICALOREXP T_logical_and INCLUSIVEOREXP  { $$ = new LogicalAndOperator($1,$3) ;}
+              ;
+
+INCLUSIVEOREXP : EXCLUSIVEOREXP {$$ = $1 ;}
+               | INCLUSIVEOREXP T_or EXCLUSIVEOREXP { $$ = new BitwiseOrOperator($1,$3) ;}
+               ;
+
+EXCLUSIVEOREXP : ANDEXP {$$ = $1 ;}
+               | EXCLUSIVEOREXP T_xor ANDEXP { $$ = new BitwiseXOROperator($1,$3) ;}
+               ;
+
+ANDEXP         : EQUALITYEXP {$$ = $1 ;}
+               | ANDREXP T_and EQUALITYEXP { $$ = new LogicalAndOperator($1,$3) ;}
+               ;
+
+EQUALITYEXP    : RELATIONALEXP {$$ = $1 ;}
+               | EQUALITYEXP T_logical_equality RELATIONALEXP { $$ = new EqualityOperator($1,$3) ;}
+               ;
+
+RELATIONALEXP  : SHIFTEXP {$$ = $1 ;}
+               | RELATIONALEXP T_lessthan_op SHIFTEXP         {$$ = new LessThanOperator($1,$3);}
+               | RELATIONALEXP T_lessthanequal_op SHIFTEXP    {$$ = new LessThanEqualOperator($1,$3);}
+               | RELATIONALEXP T_greaterthan_op SHIFTEXP      {$$ = new GreaterThanOperator($1,$3);}
+               | RELATIONALEXP T_greaterthanequal_op SHIFTEXP {$$ = new GreaterThanOperatorEqual($1,$3);}
+               ;
+
+SHIFTEXP       : ADDEXP {$$ = $1 ;}
+               | SHIFTEXP T_shift ADDEXP { $$ = new ;} /////////////////////////
+               ;
+                
+ADDEXP         : MULTEXP {$$ = $1 ;}
+               | ADDEXP T_add MULTEXP{ $$ = new AdditionOperator($1,$3) ;}
+               | ADDEXP T_sub MULTEXP{ $$ = new SubtractionOperator($1,$3) ;}
+               ;
+
+MULTEXP        : UNARYEXP
+               | MULTEXP T_mult UNARYEXP { $$ = new MultiplicationOperator($1,$3); }
+               | MULTEXP T_div  UNARYEXP { $$ = new DivisionOperator($1,$3); }
+               | MULTEXP T_rem  UNARYEXP { $$ = new ModuloOperator($1,$3); } 
+               ; 
+
+UNARYEXP       : POSTFIXEXP {$$ = $1}
+               | T_inc UNARYEXP   {$$ = new AssignmentOperator($1,new AdditionOperator($1,new NumberConstant(1)));}   
+               | T_dec UNARYEXP   {$$ = new AssignmentOperator($1,new SubtractionOperator($1,new NumberConstant(1)));} 
+               | T_sizeof UNARYEXP {$$ = $2}        /////////////////////////////////////
+               | T_sizeof T_lrb TYPE T_rrb {$$ = $1} ///////////////////////////////////
+               | T_sub UNARYEXP   { $$ = new MultiplicationOperator($2,new NumberConstant(-1)); }
+               | T_not UNARYEXP   { $$ = new NotOperator($2); }   
+               | T_and UNARYEXP   { $$ = new AddressOperator($2); }   
+               ;
+
+POSTFIXEXP     : PRIMARYEXP { $$ = $1; }
+               | POSTFIXEXP T_lsb EXPRESSION T_rsb {$$ = new Array($1,$2);} ////////////////////////
+               | POSTFIXEXP T_dot T_identifier {$$ = DotOperator($1) ;}     ////////////////////////
+               | POSTFIXEXP T_arrow T_identifier {$$ = ArrowOp($1);}        ////////////////////////
+               | POSTFIXEXP T_inc {$$ = new AssignmentOperator($1,new AdditionOperator($1,new NumberConstant(1)));}               ////////////////////////
+               | POSTFIXEXP T_dec {$$ = new AssignmentOperator($1,new SubtractionOperator($1,new NumberConstant(1)));}               ////////////////////////
+               ;
+
+ARGUMENT       : EXPRESSION T_rrb {$$ = new Parameter($1,nullptr);}
+               | EXPRESSION ARGUMENT T_rrb {$$ = new Parameter($1,$2);}
+               ;
+
+PRIMARYEXP     : T_identifier {}        {$$ = new Variable($1);}
+               | CONSTANT               {$$ = $1;}
+               | T_stringliteral        {$$ = new StringConstant($1);}
+               | T_lrb EXPRESSION T_rrb {$$ = $2;}
+               ;
+
+CONSTANT       : T_int_const {$$ = new NumberConstant($1);}
+               ;
+
+
 
 INT : T_int {$$ = new Int();}
-    ;
+    ; 
 
  
 %%

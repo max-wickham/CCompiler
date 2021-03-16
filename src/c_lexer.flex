@@ -88,7 +88,11 @@ ALL .
 [&]		{ yylval.string = new std::string(yytext); return T_and; }
 [=][=]		{ yylval.string = new std::string(yytext); return T_logical_equality; }
 [!][=]		{ yylval.string = new std::string(yytext); return T_logical_inequality; }
-([<>][=])|[<>]	{ yylval.string = new std::string(yytext); return T_rel_op; }  
+([<>][=])|[<>]	{ yylval.string = new std::string(yytext); return T_rel_op; }
+[>=]    { yylval.string = new std::string(yytext); return T_greaterthanequal_op; }
+[<=]    { yylval.string = new std::string(yytext); return T_lessthanequal_op; }
+[>]     { yylval.string = new std::string(yytext); return T_greaterthan_op; }
+[<]     { yylval.string = new std::string(yytext); return T_lessthan_op; }
 [<>][<>]	{ yylval.string = new std::string(yytext); return T_shift; }
 [*] 		{ yylval.string = new std::string(yytext); return T_mult; }
 [\/]		{ yylval.string = new std::string(yytext); return T_div; }
@@ -97,8 +101,10 @@ ALL .
 [!]		{ yylval.string = new std::string(yytext); return T_not; }
 [.]		{ return T_dot; }
 [-][>]		{ return T_arrow; }
-[+-][+-]	{ yylval.string = new std::string(yytext); return T_inc_dec; }
-[+-]		{ yylval.string = new std::string(yytext); return T_addsub_OP; }
+[++]	{ yylval.string = new std::string(yytext); return T_inc; }
+[--]	{ yylval.string = new std::string(yytext); return T_dec; } 
+[+]		{ yylval.string = new std::string(yytext); return T_add; }
+[-]		{ yylval.string = new std::string(yytext); return T_sub; }
 
 
        
