@@ -77,11 +77,18 @@ void Bindings::setContinue(std::string label){
     continue_label = label;
 }
 
+void Bindings::setCase(std::string label){
+    case_label = label;
+}
+
 std::string Bindings::getBreak(){
     return break_label;
 }
 std::string Bindings::getContinue(){
     return continue_label;
+}
+std::string Bindings::getCase(){
+    return case_label;
 }
 
 std::string Bindings::createLabel(std::string id){

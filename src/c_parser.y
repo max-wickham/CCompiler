@@ -1,5 +1,5 @@
 /* starting from scratch */
-
+%define parse.error verbose
 %code requires{
 
 #include "bindings.hpp"
@@ -32,6 +32,10 @@ void yyerror(const char *);
   Expression *expression;
   ReturnStatement *returnstatement;
   Int *intt;
+  Decleration *decleration;
+  ParameterDefinition *parameterDefinition;
+  Parameter *parameter;
+  Type *type;
 }
 
 %token 
@@ -53,11 +57,11 @@ void yyerror(const char *);
 
 %type <top> TOP
 
-%type <statement> STATEMENT SELECTIONSTATEMENT ITERATIONSTATEMENT EXPRESSIONSTATEMENT 
+%type <statement> STATEMENT SELECTIONSTATEMENT ITERATIONSTATEMENT EXPRESSIONSTATEMENT RETURNSTATEMENT
 
 %type <type>     TYPE
 
-%type<declaration> PARAMETER
+%type<parameterDefinition> PARAMETER
 
 %type <expression> EXPRESSION CONSTANT PRIMARYEXP ARGUMENT POSTFIXEXP UNARYEXP MULTEXP ADDEXP 
                    SHIFTEXP EQUALITYEXP RELATIONALEXP ANDEXP  EXCLUSIVEOREXP 
@@ -86,86 +90,87 @@ ROOT : TOP {g_root = $1; }
 
 TOP  : FUNCTION {$$ = new Top(); $$->addFunction($1);}
      | TOP FUNCTION{$$->addFunction($2);}    
-     | TYPE T_identifier {$$ = new Top(); $$->addGlobalVariable( new Decleration($1,$2));}
-     | TOP TYPE T_identifier{$$->addGlobalVariable(new Decleration($1,$2));}
      ;
     
-FUNCTION : TYPE T_identifier PARAMETER STATEMENT {$$ = new Function(new Decleration($1,$2),$3,$4,nullptr);}
+FUNCTION : TYPE T_identifier PARAMETER STATEMENT {$$ = new Function(new Decleration($1,$2),$4,$3);}
          ;
 
-PARAMETER     : TYPE T_identifier T_rrb             {$$ = ParameterDefinition(new Decleration($1,$2),nullptr) ;}
-              | TYPE T_identifier T_comma PARAMETER {$$ =  ParameterDefinition(new Decleration($1,$2),$4);}
+PARAMETER     : TYPE T_identifier T_rrb             {$$ = new ParameterDefinition(new Decleration($1,$2),nullptr) ; std::cout << "";}
+              | TYPE T_identifier T_comma PARAMETER {$$ = new ParameterDefinition(new Decleration($1,$2),$4); std::cout << "";}
               | T_lrb PARAMETER                     {$$ = $2;}
+              | T_lrb T_rrb                         {$$ = nullptr;}
               ;
 
-TYPE     : T_void            {$$ = $1  ;}
-         | T_int             {$$ = new Int() ;}
+TYPE     : T_void            {$$ = new Void();}
+         | T_int             {$$ = new Int(); std::cout << "";}
          | T_char            {$$ = new Char();}
-         | T_short           {$$ = $1 ;}
-         | T_long            {$$ = $1 ;}
-         | T_float           {$$ = new Float() ;}
-         | T_double          {$$ = $1 ;}
-         | T_typedef         {$$ = $1 ;}
-         | T_long TYPE       {$$ = $1 ;}
-         | T_unsigned TYPE   {$$ = $2 ; $2->setUnSigned()}
-         | T_signed TYPE     {$$ = $2}
+         | T_short           {$$ = new Int();}
+         | T_long            {$$ = new Int();}
+         | T_float           {$$ = new Float();}
+         | T_double          {$$ = new Float();}
+         | T_typedef         {$$ = new Int();}
+         | T_long TYPE       {$$ = new Int();}
+         | T_unsigned TYPE   {$$ = $2; $2->setUnSigned();}
+         | T_signed TYPE     {$$ = $2;}
          ;
 
 STATEMENT : ITERATIONSTATEMENT  {$$ = $1;}
+          | RETURNSTATEMENT     {$$ = $1;}
           | SELECTIONSTATEMENT  {$$ = $1;}
           | EXPRESSIONSTATEMENT {$$ = $1;}
           | T_rcb               {$$ = nullptr;}
           | T_lcb STATEMENT     {$$ = $2;}
           ;
 
+RETURNSTATEMENT     : T_return EXPRESSION  T_sc STATEMENT {$$ = new ReturnStatement($2,$4); std::cout << "";}
+
 EXPRESSIONSTATEMENT : EXPRESSION T_sc STATEMENT {$$ = new ExpressionStatement($1,$3);}
                     ;
 
-SELECTIONSTATEMENT  : T_if T_lrb EXPRESSION T_rrb STATEMENT STATEMENT                   {$$ = new IfElseStatement($3,$5,$6);}            
-                    | T_if T_lrb EXPRESSION T_rrb STATEMENT T_else STATEMENT STATEMENT  {$$ = new IfElseStatement($5,$7);}
-                    | T_switch T_lrb EXPRESSION T_rrb STATEMENT STATEMENT               {$$ = new SwitchStatement($5);}
+SELECTIONSTATEMENT  : T_if T_lrb EXPRESSION T_rrb STATEMENT STATEMENT                   {$$ = new IfElseStatement($3,$5,nullptr,$6);}            
+                    | T_if T_lrb EXPRESSION T_rrb STATEMENT T_else STATEMENT STATEMENT  {$$ = new IfElseStatement($3,$5,$7,$8);}
                     ;
 
 ITERATIONSTATEMENT  : T_while T_lrb EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new WhileLoopStatement($3,$5,$6) ;}
                     | T_do STATEMENT T_while T_lrb EXPRESSION T_rrb T_sc STATEMENT {$$ = new DoWhileLoopStatement($5,$2,$8);}
-                    | T_for T_lrb EXPRESSION T_sc EXPRESSION T_sc EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ForLoopStatement($3,$4,$5,$7,$8);}
+                    | T_for T_lrb EXPRESSION T_sc EXPRESSION T_sc EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ForLoopStatement($3,$5,$7,$9,$10);}
                     ;
 
-EXPRESSION : ASSIGNEXPRESSION {$$ = $1}
+EXPRESSION : ASSIGNEXPRESSION {$$ = $1;}
            ;
 
 
 ASSIGNEXPRESSION : CONDEXP {$$ = $1;}
            | UNARYEXP ASSIGN_OP ASSIGNEXPRESSION {  
-             if(*%2 == "="){
-               $$ = new AssignmentOperator($1,$3);
+             if(*$2 == "="){
+               $$ = new AssignmentOperator($1,$3);std::cout << "";
              }
-             elseif(*$2 == "+="){
+             else if(*$2 == "+="){
                {$$ = new AssignmentOperator($1,new AdditionOperator($1,$3));}
              }
-             elseif(*$2 == "-="){
-               {$$ = new AssignmentOperator($1,new SubtractionOperator($1,%3));}
+             else if(*$2 == "-="){
+               {$$ = new AssignmentOperator($1,new SubtractionOperator($1,$3));}
              }
-             elseif(*$2 == "/="){
-               {$$ = new AssignmentOperator($1,new DivisionOperator($1,%3));}
+             else if(*$2 == "/="){
+               {$$ = new AssignmentOperator($1,new DivisionOperator($1,$3));}
              }
-             elseif(*$2 == "%="){
-               {$$ = new AssignmentOperator($1,new ModuloOperator($1,%3));}
+             else if(*$2 == "%="){
+               {$$ = new AssignmentOperator($1,new ModuloOperator($1,$3));}
              } 
-             elseif(*$2 == "&="){
-               {$$ = new AssignmentOperator($1,new BitwiseAndOperator($1,%3));}
+             else if(*$2 == "&="){
+               {$$ = new AssignmentOperator($1,new BitwiseAndOperator($1,$3));}
              }
-             elseif(*$2 == "^="){
-               {$$ = new AssignmentOperator($1,new BitwiseXOROperator($1,%3));}
+             else if(*$2 == "^="){
+               {$$ = new AssignmentOperator($1,new BitwiseXorOperator($1,$3));}
              }
-             elseif(*$2 == "|="){
-               {$$ = new AssignmentOperator($1,new BitwiseOrOperator($1,%3));}
+             else if(*$2 == "|="){
+               {$$ = new AssignmentOperator($1,new BitwiseOrOperator($1,$3));}
              }
-             elseif(*$2 == "<<="){
-               {$$ = new AssignmentOperator($1,new ShiftLeftOperator($1,%3));}
+             else if(*$2 == "<<="){
+               {$$ = new AssignmentOperator($1,new ShiftLeftOperator($1,$3));}
              }
-             elseif(*$2 == ">>="){
-               {$$ = new AssignmentOperator($1,new ShiftRightOperator($1,%3));}
+             else if(*$2 == ">>="){
+               {$$ = new AssignmentOperator($1,new ShiftRightOperator($1,$3));}
              }
              else{
                
@@ -195,7 +200,7 @@ INCLUSIVEOREXP : EXCLUSIVEOREXP {$$ = $1 ;}
                ;
 
 EXCLUSIVEOREXP : ANDEXP {$$ = $1 ;}
-               | EXCLUSIVEOREXP T_xor ANDEXP { $$ = new BitwiseXOROperator($1,$3) ;}
+               | EXCLUSIVEOREXP T_xor ANDEXP { $$ = new BitwiseXorOperator($1,$3) ;}
                ;
 
 ANDEXP         : EQUALITYEXP {$$ = $1 ;}
@@ -209,39 +214,39 @@ EQUALITYEXP    : RELATIONALEXP {$$ = $1 ;}
 RELATIONALEXP  : SHIFTEXP {$$ = $1 ;}
                | RELATIONALEXP T_lessthan_op SHIFTEXP         {$$ = new LessThanOperator($1,$3);}
                | RELATIONALEXP T_lessthanequal_op SHIFTEXP    {$$ = new LessThanEqualOperator($1,$3);}
-               | RELATIONALEXP T_greaterthan_op SHIFTEXP      {$$ = new GreaterThanOperator($1,$3);}
-               | RELATIONALEXP T_greaterthanequal_op SHIFTEXP {$$ = new GreaterThanOperatorEqual($1,$3);}
+               | RELATIONALEXP T_greaterthan_op SHIFTEXP      {$$ = new NotOperator(new LessThanEqualOperator($1,$3));}
+               | RELATIONALEXP T_greaterthanequal_op SHIFTEXP {$$ = new NotOperator(new LessThanOperator($1,$3));}
                ;
 
 SHIFTEXP       : ADDEXP {$$ = $1 ;}
-               | SHIFTEXP T_shift ADDEXP { $$ = new ;} /////////////////////////
+               | SHIFTEXP T_shift ADDEXP {} /////////////////////////
                ;
                 
-ADDEXP         : MULTEXP {$$ = $1 ;}
-               | ADDEXP T_add MULTEXP{ $$ = new AdditionOperator($1,$3) ;}
-               | ADDEXP T_sub MULTEXP{ $$ = new SubtractionOperator($1,$3) ;}
+ADDEXP         : MULTEXP {$$ = $1 ; std::cout << "";}
+               | ADDEXP T_add ADDEXP{ $$ = new AdditionOperator($1,$3) ; std::cout << "";}
+               | ADDEXP T_sub ADDEXP{ $$ = new SubtractionOperator($1,$3) ; std::cout << "";}
                ;
 
-MULTEXP        : UNARYEXP
-               | MULTEXP T_mult UNARYEXP { $$ = new MultiplicationOperator($1,$3); }
-               | MULTEXP T_div  UNARYEXP { $$ = new DivisionOperator($1,$3); }
-               | MULTEXP T_rem  UNARYEXP { $$ = new ModuloOperator($1,$3); } 
+MULTEXP        : UNARYEXP {$$ = $1;}
+               | MULTEXP T_mult MULTEXP { $$ = new MultiplicationOperator($1,$3);  std::cout << "";}
+               | MULTEXP T_div  MULTEXP { $$ = new DivisionOperator($1,$3); }
+               | MULTEXP T_rem  MULTEXP { $$ = new ModuloOperator($1,$3); } 
                ; 
 
-UNARYEXP       : POSTFIXEXP {$$ = $1}
-               | T_inc UNARYEXP   {$$ = new AssignmentOperator($1,new AdditionOperator($1,new NumberConstant(1)));}   
-               | T_dec UNARYEXP   {$$ = new AssignmentOperator($1,new SubtractionOperator($1,new NumberConstant(1)));} 
-               | T_sizeof UNARYEXP {$$ = $2}        /////////////////////////////////////
-               | T_sizeof T_lrb TYPE T_rrb {$$ = $1} ///////////////////////////////////
+UNARYEXP       : POSTFIXEXP {$$ = $1;}
+               | T_inc UNARYEXP   {$$ = new AssignmentOperator($2,new AdditionOperator($2,new NumberConstant(1)));}   
+               | T_dec UNARYEXP   {$$ = new AssignmentOperator($2,new SubtractionOperator($2,new NumberConstant(1)));} 
+               | T_sizeof UNARYEXP {$$ = $2;}        /////////////////////////////////////
+               | T_sizeof T_lrb EXPRESSION T_rrb {$$ = new SizeOfOperator($3);} ///////////////////////////////////
                | T_sub UNARYEXP   { $$ = new MultiplicationOperator($2,new NumberConstant(-1)); }
                | T_not UNARYEXP   { $$ = new NotOperator($2); }   
                | T_and UNARYEXP   { $$ = new AddressOperator($2); }   
                ;
 
 POSTFIXEXP     : PRIMARYEXP { $$ = $1; }
-               | POSTFIXEXP T_lsb EXPRESSION T_rsb {$$ = new Array($1,$2);} ////////////////////////
-               | POSTFIXEXP T_dot T_identifier {$$ = DotOperator($1) ;}     ////////////////////////
-               | POSTFIXEXP T_arrow T_identifier {$$ = ArrowOp($1);}        ////////////////////////
+               | POSTFIXEXP T_lsb EXPRESSION T_rsb {} ////////////////////////
+               | POSTFIXEXP T_dot T_identifier { ;}     ////////////////////////
+               | POSTFIXEXP T_arrow T_identifier {}        ////////////////////////
                | POSTFIXEXP T_inc {$$ = new AssignmentOperator($1,new AdditionOperator($1,new NumberConstant(1)));}               ////////////////////////
                | POSTFIXEXP T_dec {$$ = new AssignmentOperator($1,new SubtractionOperator($1,new NumberConstant(1)));}               ////////////////////////
                ;
@@ -250,7 +255,7 @@ ARGUMENT       : EXPRESSION T_rrb {$$ = new Parameter($1,nullptr);}
                | EXPRESSION ARGUMENT T_rrb {$$ = new Parameter($1,$2);}
                ;
 
-PRIMARYEXP     : T_identifier {}        {$$ = new Variable($1);}
+PRIMARYEXP     : T_identifier           {$$ = new Variable($1); std::cout << "";}
                | CONSTANT               {$$ = $1;}
                | T_stringliteral        {$$ = new StringConstant($1);}
                | T_lrb EXPRESSION T_rrb {$$ = $2;}

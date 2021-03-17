@@ -31,6 +31,7 @@ class Bindings{
     int label_count;
     std::string break_label;
     std::string continue_label;
+    std::string case_label;
     int current_offset;
     std::list<std::map<std::string, BindingData>> globalBindings;
     //this should be shared across all bindings
@@ -50,8 +51,10 @@ class Bindings{
     //void addLabel(std::string id, int position);
     void setBreak(std::string label);
     void setContinue(std::string label);   
+    void setCase(std::string label);   
     std::string getBreak();
     std::string getContinue();
+    std::string getCase();
     std::string createLabel(std::string id);
     Bindings& operator=(const Bindings& rhs);
 };

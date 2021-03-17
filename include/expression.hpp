@@ -8,9 +8,8 @@ class Parameter;
 
 class Expression: public Node{
     public:
+    virtual ~Expression(){};
     virtual void printASM(Bindings *bindings) = 0;
-    //virtual void printASM(Bindings *bindings, std::string returnVariable) = 0;
-    //virtual void printASM(Bindings *bindings, std::string returnRegister) = 0;
     virtual Type*  getType(Bindings *bindings) = 0;
 };
 
@@ -19,28 +18,28 @@ class FunctionCall: public Expression{
     std::string id;
     Parameter *parameter;
     public:
-    FunctionCall(std::string id,Parameter *parameter);
+    FunctionCall(std::string *id,Parameter *parameter);
     void printASM(Bindings *bindings);
-    //void printASM(Bindings *bindings, std::string returnVariable);
-    //void printASM(Bindings *bindings, std::string returnRegister);
+    Type*  getType(Bindings *bindings) override;
 };
 
 class Variable: public Expression{
     protected:
     std::string id;
     public:
-    Variable(std::string id);
+    Variable(std::string *id);
     void printASM(Bindings *bindings) override;
     Type*  getType(Bindings *bindings) override;
     std::string getName();
 };
-
+//TODO
 class StringConstant: public Expression{
     protected:
     std::string value;
     public:
-    StringConstant(std::string value);
-    void printASM(Bindings *bindings, std::string returnRegister);
+    StringConstant(std::string *value);
+    void printASM(Bindings *bindings);
+    Type*  getType(Bindings *bindings);
 };
 
 class NumberConstant: public Expression{
@@ -61,6 +60,14 @@ class FloatConstant: public Expression{
     Type*  getType(Bindings *bindings) override;
 };
 
+class UnaryOperatorExpression: public Expression{
+    protected:
+    Expression *expression;
+
+    public:
+    UnaryOperatorExpression(Expression *expression);
+};
+
 class BinaryOperatorExpression: public Expression{
     protected:
     Expression *leftExpression;
@@ -68,8 +75,6 @@ class BinaryOperatorExpression: public Expression{
 
     public:
     BinaryOperatorExpression(Expression *leftExpression, Expression *rightExpression);
-    void printASM(Bindings *bindings, std::string returnRegister);
-    void print() const;
     Type* getType(Bindings *bindings) override;
 };
 
@@ -170,46 +175,42 @@ class ShiftRightOperator: public BinaryOperatorExpression{
     void printASM(Bindings *bindings);
 };
 
-class UnaryOperatorExpression: public Expression{
-    protected:
-    Expression *expression;
-
-    public:
-    void printASM(Bindings *bindings);
-    UnaryOperatorExpression(Expression *expression);
-};
-
 class DefreferenceOperator: public UnaryOperatorExpression{
     public:
     using UnaryOperatorExpression::UnaryOperatorExpression;
     void printASM(Bindings *bindings);
+    Type*  getType(Bindings *bindings);
 };
 
 class AddressOperator: public UnaryOperatorExpression{
     public:
     using UnaryOperatorExpression::UnaryOperatorExpression;
     void printASM(Bindings *bindings);
+    Type*  getType(Bindings *bindings);
 };
 
 class NotOperator: public UnaryOperatorExpression{
     public:
     using UnaryOperatorExpression::UnaryOperatorExpression;
     void printASM(Bindings *bindings);
+    Type*  getType(Bindings *bindings);
 };
 
 class BitwiseNotOperator: public UnaryOperatorExpression{
     public:
     using UnaryOperatorExpression::UnaryOperatorExpression;
     void printASM(Bindings *bindings);
+    Type*  getType(Bindings *bindings);
 };
-//TODO
+
 class SizeOfOperator: public UnaryOperatorExpression{
     public:
     using UnaryOperatorExpression::UnaryOperatorExpression;
     void printASM(Bindings *bindings);
+    Type*  getType(Bindings *bindings);
 };
-//TODO
-class TernaryOperator{
+
+class TernaryOperator: public Expression{
     protected:
     Expression* expressionOne;
     Expression* expressionTwo;
@@ -217,6 +218,7 @@ class TernaryOperator{
     public:
     TernaryOperator(Expression* expressionOne, Expression* expressionTwo, Expression* expressionThree);
     void printASM(Bindings *bindings);
+    Type*  getType(Bindings *bindings);
 };
 
 #endif

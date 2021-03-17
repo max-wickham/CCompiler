@@ -75,7 +75,7 @@ ALL .
 [[]		{ return T_lsb; }
 []]		{ return T_rsb; }
 [=]		{ yylval.string = new std::string(yytext); return T_equal; }
-{ASSIGNMENT_OPERATOR} { yylval.string = new std::string(yytext); return T_assignment_op; }
+{ASSIGNMENT_OPERATOR} { yylval.string = new std::string(yytext); std::cout << ""; return T_assignment_op; }
 [?]		{ return T_qm; }
 [:]		{ return T_colon; }
 [|][|]		{ return T_logical_or; }
@@ -97,9 +97,9 @@ ALL .
 [!]		{ yylval.string = new std::string(yytext); return T_not; }
 [.]		{ return T_dot; }
 [-][>]		{ return T_arrow; }
-[++]	{ yylval.string = new std::string(yytext); return T_inc; }
-[--]	{ yylval.string = new std::string(yytext); return T_dec; } 
-[+]		{ yylval.string = new std::string(yytext); return T_add; }
+[+][+]	{ yylval.string = new std::string(yytext);std::cout << ""; return T_inc; }
+[-][-]	{ yylval.string = new std::string(yytext); return T_dec; } 
+[+]		{ yylval.string = new std::string(yytext); std::cout << ""; return T_add;}
 [-]		{ yylval.string = new std::string(yytext); return T_sub; }
 
 
@@ -113,7 +113,7 @@ do		{ return T_do; }
 for		{ return T_for; }
 sizeof		{ return T_sizeof; }
 
-{IDENTIFIER}	                        { yylval.string = new std::string(yytext); return T_identifier; }
+{IDENTIFIER}	                        { yylval.string = new std::string(yytext); std::cout << ""; return T_identifier;}
 
 (({HEXCONSTANT}|{OCTALCONSTANT})|({DECIMALCONSTANT})){INTEGERSUFFIX}?     { yylval.number = strtol(yytext, NULL, 0); return T_int_const; }
 

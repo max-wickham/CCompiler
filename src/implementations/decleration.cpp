@@ -5,7 +5,7 @@ class Type;
 //#include "bindings.hpp"
 #include <string>
 
-Decleration::Decleration(Type *type, std::string id){
+Decleration::Decleration(Type *type, std::string *id){
     this->type = type;
-    this->id = id;
+    this->id = *id;
 }

@@ -42,14 +42,13 @@ class IfElseStatement: public Statement{
 
 class ForLoopStatement: public Statement{
     protected:
-    Decleration *definition;
-    Expression *initialiser;
+    Expression *definition;
     Expression *condition;
     Expression *incrementer;
     Statement *statement;
 
     public:
-    ForLoopStatement(Decleration *definition, Expression *initialiser, Expression *condition, Expression *incrementer,
+    ForLoopStatement(Expression *definition, Expression *condition, Expression *incrementer,
         Statement *statement, Statement *nextStatement);
     void printASM(Bindings* bindings) override;
 
@@ -59,6 +58,7 @@ class WhileLoopStatement: public Statement{
     protected:
     Expression *condition;
     Statement *statement;
+    public:
     WhileLoopStatement(Expression *condition, Statement *statement, Statement *nextStatement);
     void printASM(Bindings* bindings) override;
 };
@@ -67,8 +67,27 @@ class DoWhileLoopStatement: public Statement{
     protected:
     Expression *condition;
     Statement *statement;
+    public:
     DoWhileLoopStatement(Expression *condition, Statement *statement, Statement *nextStatement);
     void printASM(Bindings* bindings) override;
+};
+
+class SwitchStatement: public Statement{
+    protected:
+    Expression *expression;
+    Statement *caseStatement;
+    public:
+    SwitchStatement(Expression *expression, Statement *caseStatement, Statement *nextStatement);
+    void printASM(Bindings* bindings) override;
+};
+
+class CaseStatement: public Statement{
+    protected:
+    Statement *statement;
+    Expression *constant;
+    public:
+    CaseStatement(Expression *constant, Statement *statement, CaseStatement *nextCaseStatement);
+    virtual void printASM(Bindings* bindings) override;
 };
 
 class ExpressionStatement: public Statement{

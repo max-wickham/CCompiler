@@ -63,6 +63,38 @@ public:
 	virtual void beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::string label) = 0;
 };
 
+class Void : public Type {
+	public:
+	Void();
+
+	int getSize() override;
+
+	std::string getName() override;
+
+	void loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings) override{}
+
+	void evaluateReturn(Bindings *bindings) override{}
+
+	void processReturn(Bindings *bindings) override{}
+
+	//places the value at the top of the stack into the register
+	void placeInRegister(Bindings *bindings, RegisterType type) override{}
+
+	//places the value in the register at the top of the stack
+	void extractFromRegister(Bindings *bindings, RegisterType type) override{}
+
+	//gets the register string from a register type
+	std::string getRegister(RegisterType type) override;
+
+	void saveVariable(Bindings *bindings, std::string id) override{}
+
+	void placeVariableOnStack(Bindings *bindings, std::string id) override{}
+
+	void placeVariableOnStack(Bindings *bindings) override{}
+
+	void beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::string label) override{}
+};
+
 class OperandType : public Type {
 public:
 	//TODO
@@ -171,6 +203,8 @@ public:
 	Pointer(Type *type);
 
 	void defreference(Bindings *bindings);
+
+	Type* getType();
 };
 
 class Float : public OperandType {

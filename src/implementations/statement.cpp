@@ -62,10 +62,9 @@ void WhileLoopStatement::printASM(Bindings* bindings){
     }
 }
 
-ForLoopStatement::ForLoopStatement(Decleration *definition, Expression *initialiser, Expression *condition, Expression *incrementer,
+ForLoopStatement::ForLoopStatement(Expression *definition, Expression *condition, Expression *incrementer,
         Statement *statement, Statement *nextStatement){
     this->definition = definition;
-    this->initialiser = initialiser;
     this->condition = condition;
     this->incrementer = incrementer;
     this->statement = statement;
@@ -78,12 +77,7 @@ void ForLoopStatement::printASM(Bindings* bindings){
     bindings->setBreak(endLabel);
     bindings->setContinue(beginLabel);
     //firstly create the definded varaible
-    if(definition != nullptr){
-        bindings->addVariable(definition);
-    }
-    if(initialiser != nullptr){
-        initialiser->printASM(bindings);
-    }
+    definition->printASM(bindings);
     std::cout << beginLabel << ":";
     //check that the condition is true
     condition->printASM(bindings);
@@ -152,8 +146,72 @@ VariableDefinition::VariableDefinition(Decleration *decleration, Statement *next
 }
 
 void VariableDefinition::printASM(Bindings *bindings){
+
     bindings->addVariable(decleration);
     if(nextStatement != nullptr){
         this->nextStatement->printASM(bindings);
+    }
+}
+
+DoWhileLoopStatement::DoWhileLoopStatement(Expression *condition, Statement *statement, Statement *nextStatement){
+    this->condition = condition;
+    this->statement = statement;
+    this->nextStatement = nextStatement;
+}
+
+void DoWhileLoopStatement::printASM(Bindings* bindings){
+    statement->printASM(bindings);
+    WhileLoopStatement *loop = new WhileLoopStatement(condition, statement, nextStatement);
+    loop->printASM(bindings);
+    delete loop;
+}
+
+SwitchStatement::SwitchStatement(Expression *expression, Statement *caseStatement, Statement *nextStatement){
+    this->expression = expression;
+    this->caseStatement = caseStatement;
+    this->nextStatement = nextStatement;
+}
+
+void SwitchStatement::printASM(Bindings* bindings){
+    std::string caseLabel = bindings->createLabel("case");
+    expression->printASM(bindings);
+    caseStatement->printASM(bindings);
+    if(this->nextStatement != nullptr){
+        nextStatement->printASM(bindings);
+    }
+    bindings->setCase(caseLabel);
+}
+
+CaseStatement::CaseStatement(Expression *constant, Statement *statement, CaseStatement *nextCaseStatement){
+    this->constant = constant;
+    this->statement = statement;
+    this->nextStatement = nextStatement;
+}
+
+void CaseStatement::printASM(Bindings* bindings){
+    if(constant != nullptr){
+        std::string endLabel = bindings->createLabel("endcase");
+        std::string passLabel = bindings->createLabel("passcase");
+        //place expression that is in stack in register
+        constant->getType(bindings)->placeInRegister(bindings,RegisterType::leftReg);
+        constant->printASM(bindings);
+        constant->getType(bindings)->placeInRegister(bindings,RegisterType::rightReg);
+        constant->getType(bindings)->extractFromRegister(bindings,RegisterType::leftReg);
+        constant->getType(bindings)->beq(bindings,RegisterType::leftReg,RegisterType::rightReg,passLabel);
+        std::cout << "nop" << std::endl;
+        std::cout << "j " << endLabel <<std::endl;
+        std::cout << "nop" << std::endl;
+        std::cout << "global. " << passLabel <<std::endl;
+        std::cout << passLabel << ":" <<std::endl;
+        statement->printASM(bindings);
+        std::cout << "j " << bindings->getCase() <<std::endl;
+        std::cout << "nop" << std::endl;
+        std::cout << "global. " << endLabel <<std::endl;
+        std::cout << endLabel << ":" <<std::endl;
+    }else{
+       statement->printASM(bindings); 
+    }
+    if(nextStatement != nullptr){
+        nextStatement->printASM(bindings);
     }
 }
