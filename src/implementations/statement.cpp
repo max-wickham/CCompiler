@@ -146,8 +146,14 @@ VariableDefinition::VariableDefinition(Decleration *decleration, Statement *next
 }
 
 void VariableDefinition::printASM(Bindings *bindings){
-
     bindings->addVariable(decleration);
+    if(decleration->expression != nullptr){
+        Variable *variable = new Variable(&decleration->id);
+        AssignmentOperator *assignment = new AssignmentOperator(variable,decleration->expression);
+        assignment->printASM(bindings);
+        delete variable;
+        delete assignment;
+    }
     if(nextStatement != nullptr){
         this->nextStatement->printASM(bindings);
     }

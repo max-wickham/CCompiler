@@ -109,6 +109,8 @@ public:
 	virtual void extractFromMultRegister(Bindings *bindings) = 0;
 	//TODO
 	virtual void extractFromDivRegister(Bindings *bindings) = 0;
+
+	virtual Expression* getZero() = 0;
 };
 
 class IntegralType : public OperandType {
@@ -134,6 +136,8 @@ public:
 	void extractFromModuloRegister(Bindings *bindings);
 	//TODO
 	void beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::string label) override;
+
+	Expression* getZero();
 };
 
 class Char : public IntegralType {
@@ -248,6 +252,8 @@ public:
 	void extractFromDivRegister(Bindings *bindings) override;
 	//TODO
 	void beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::string label);
+
+	Expression* getZero();
 };
 
  #endif

@@ -68,6 +68,11 @@ void IntegralType::beq(Bindings *bindings, RegisterType reg1, RegisterType reg2,
     std::cout << "beq " << this->getRegister(reg1)
         << "," << this->getRegister(reg2) << "," << label << std::endl; 
 }
+
+Expression* IntegralType::getZero(){
+    NumberConstant *zero = new NumberConstant(0);
+    return zero;
+}
 //int
 Int::Int(){}
 
@@ -418,4 +423,9 @@ void Float::beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::s
     }
     std::cout << "c.e.d " << reg1String << "," << reg2String << std::endl;
     std::cout << "bc1t " << label << std::endl;
+}
+
+Expression* Float::getZero(){
+    FloatConstant *zero = new FloatConstant(0);
+    return zero;
 }

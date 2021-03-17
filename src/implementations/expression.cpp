@@ -116,7 +116,7 @@ void EqualityOperator::printASM(Bindings *bindings){
     std::cout << "j     " << labelEnd <<std::endl;
     std::cout << ".global " << labelPass <<std::endl;
     std::cout << labelPass << ":" <<std::endl;
-    std::cout << "li    " << "$v0, 0" <<std::endl;
+    std::cout << "li    " << "$v0, 1" <<std::endl;
     std::cout << ".global " << labelEnd <<std::endl;
     std::cout << labelEnd << ":" <<std::endl;
     std::cout << "sw    $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
@@ -257,18 +257,25 @@ void ModuloOperator::printASM(Bindings *bindings){
 
 void LogicalAndOperator::printASM(Bindings *bindings){
     //first evaluate left hand expression and place in register, the print asm places the value at the top of the stack
+    std::cout << "start ------------>" << std::endl;
+    std::cout << leftExpression->getType(bindings)->getName() <<std::endl;
     std::string endLabel = bindings->createLabel("end");
     std::string failLabel = bindings->createLabel("fail");
-    FloatConstant *zero = new FloatConstant(0);
-    EqualityOperator* equalityOperator = new EqualityOperator(leftExpression,zero);
+    Expression *zeroL = ((OperandType*)leftExpression->getType(bindings))->getZero();
+    EqualityOperator* equalityOperator = new EqualityOperator(leftExpression,zeroL);
     equalityOperator->printASM(bindings);
+    std::cout << "one ------------>" << std::endl;
     std::cout << "lw    " << leftExpression->getType(bindings)->getRegister(RegisterType::evaluateReg)
         << ", " << bindings->currentOffset() << "($fp)" << std::endl;
     leftExpression->getType(bindings)->beq(bindings,RegisterType::evaluateReg,RegisterType::zeroReg,failLabel);
     std::cout << "nop" << std::endl;
     delete equalityOperator;
-    equalityOperator = new EqualityOperator(rightExpression,zero);
+    delete zeroL;
+    Expression *zeroR = ((OperandType*)rightExpression->getType(bindings))->getZero();
+    equalityOperator = new EqualityOperator(rightExpression,zeroR);
     equalityOperator->printASM(bindings);
+    delete equalityOperator;
+    delete zeroR;
     std::cout << "lw    " << leftExpression->getType(bindings)->getRegister(RegisterType::evaluateReg)
         << ", " << bindings->currentOffset() << "($fp)" << std::endl;
     leftExpression->getType(bindings)->beq(bindings,RegisterType::evaluateReg,RegisterType::zeroReg,failLabel);
@@ -282,6 +289,7 @@ void LogicalAndOperator::printASM(Bindings *bindings){
     std::cout << "sw    $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
     std::cout << ".global " << endLabel << std::endl;
     std::cout << endLabel << ":" << std::endl;
+    std::cout << "end ------------>" << std::endl;
 }
 
 void LogicalOrOperator::printASM(Bindings *bindings){
