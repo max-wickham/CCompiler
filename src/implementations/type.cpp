@@ -398,11 +398,12 @@ std::string Float::getDivisionOperator(){
 
 void Float::extractFromMultRegister(Bindings *bindings){
 //doesn't need to do anything as is already in evaluate register
-    return;
+    this->extractFromRegister(bindings,RegisterType::evaluateReg);
 }
 
 void Float::extractFromDivRegister(Bindings *bindings){
 //doesnt need to do anything as is already in  
+    this->extractFromRegister(bindings,RegisterType::evaluateReg);
     return;
 }
 

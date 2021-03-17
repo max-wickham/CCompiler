@@ -12,8 +12,8 @@ fi
 PASSED=0
 FAILED=0
 
-for j in compiler_tests/local_var/*; do
-    #for j in ${i}/*; do 
+for i in compiler_tests/*; do
+    for j in ${i}/*; do 
     
 
         nj=${j%.c}
@@ -43,7 +43,7 @@ for j in compiler_tests/local_var/*; do
 
         fi 
 
-    #done 
+    done 
 done
 
 echo "########################################"
