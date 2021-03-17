@@ -4,15 +4,22 @@
 int main(){
     std::string response = "";
     std::string input;
-    std::cin >> input;
     char prevChar = 'a';
-    for(char &c : input){
-        if(c == '{'){
-            if((prevChar == '}')|(prevChar == ';')){
-                std::cout << " scope ";
+    while(std::getline(std::cin, input)){
+        //std::cout << input <<std::endl;
+        for(char &c : input){
+            if(c == '{'){
+                if((prevChar == '}')|(prevChar == ';')){
+                    std::cout << "scope ";
+                }
+            }
+            std::cout << c;
+            if((c != '\t')&(c!=' ')&(c!='\n')&(c!='\v')&(c!='\r')){
+                //std::cout << prevChar;
+                //std::cout << c <<std::endl;
+                prevChar = c;
             }
         }
-        std::cout << c;
-        prevChar = c;
+        std::cout << std::endl;
     }
 }
