@@ -12,5 +12,6 @@ Decleration::Decleration(Type *type, std::string *id){
 
 Decleration::Decleration(Type *type, std::string *id, Expression *expression){
     this->type = type;
+    this->id = *id;
     this->expression = expression;
 }

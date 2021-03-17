@@ -12,6 +12,15 @@ class Statement: public Node{
     virtual void printASM(Bindings* bindings) = 0;
 };
 
+class ScopedStatement: public Statement{
+    protected:
+    Statement *nextStatement;
+    Statement *statement;
+    public:
+    ScopedStatement(Statement *statement, Statement *nextStatement);
+    void printASM(Bindings* bindings);
+};
+
 class VariableDefinition: public Statement{
     protected:
     Decleration *decleration;

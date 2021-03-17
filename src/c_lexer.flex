@@ -105,6 +105,7 @@ ALL .
 
        
    /* added statements */
+scope { return T_scope; }
 if		{ return T_if; }
 else		{ return T_else; }
 return		{ return T_return; }

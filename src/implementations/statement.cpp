@@ -4,6 +4,20 @@
 #include "expression.hpp"
 class Decleration;
 
+ScopedStatement::ScopedStatement(Statement *statement, Statement *nextStatement){
+    this->statement = statement;
+    this->nextStatement = nextStatement;
+}   
+
+void ScopedStatement::printASM(Bindings* bindings){
+    bindings->addScope();
+    this->statement->printASM(bindings);
+    bindings->deleteScope();
+    if(this->nextStatement != nullptr){
+        this->nextStatement->printASM(bindings);
+    }
+}
+
 ReturnStatement::ReturnStatement(Expression *expression, Statement *nextStatement){
     this->expression = expression;
     this->nextStatement = nextStatement;

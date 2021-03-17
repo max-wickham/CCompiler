@@ -45,7 +45,7 @@ void yyerror(const char *);
       T_identifier T_sc T_comma T_lrb T_lcb T_rcb T_lsb T_rsb T_qm T_colon T_logical_or
 			T_logical_and T_or T_xor T_and T_logical_equality T_logical_inequality T_greaterthanequal_op T_lessthanequal_op T_greaterthan_op T_lessthan_op T_shift T_mult T_div
 			T_rem T_tilde T_not T_dot T_arrow T_inc T_dec T_add T_sub T_assignment_op T_equal
-			T_sizeof T_int_const T_if T_while T_do T_for T_return		
+			T_sizeof T_int_const T_scope T_if T_while T_do T_for T_return		
 			T_void T_char T_short T_int T_long T_float T_double T_signed T_unsigned
 			T_typedef T_static 
 			T_volatile T_goto T_break T_continue
@@ -130,6 +130,7 @@ EXPRESSIONSTATEMENT : EXPRESSION T_sc STATEMENT {$$ = new ExpressionStatement($1
 
 SELECTIONSTATEMENT  : T_if T_lrb EXPRESSION T_rrb STATEMENT STATEMENT                   {$$ = new IfElseStatement($3,$5,nullptr,$6);}            
                     | T_if T_lrb EXPRESSION T_rrb STATEMENT T_else STATEMENT STATEMENT  {$$ = new IfElseStatement($3,$5,$7,$8);}
+                    | T_scope STATEMENT STATEMENT                                       {$$ = new ScopedStatement($2,$3);}
                     ;
 
 ITERATIONSTATEMENT  : T_while T_lrb EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new WhileLoopStatement($3,$5,$6) ;}
