@@ -78,18 +78,18 @@ ALL .
 {ASSIGNMENT_OPERATOR} { yylval.string = new std::string(yytext); std::cout << ""; return T_assignment_op; }
 [?]		{ return T_qm; }
 [:]		{ return T_colon; }
-[|][|]		{ return T_logical_or; }
+[\|][\|]		{ return T_logical_or; }
 [&][&]		{ return T_logical_and; }
-[|]		{ return T_or; }
+[\|]		{ return T_or; }
 [\^]		{ return T_xor; }
 [&]		{ yylval.string = new std::string(yytext); return T_and; }
 [=][=]		{ yylval.string = new std::string(yytext); return T_logical_equality; }
 [!][=]		{ yylval.string = new std::string(yytext); return T_logical_inequality; }
-[>=]    { yylval.string = new std::string(yytext); return T_greaterthanequal_op; }
-[<=]    { yylval.string = new std::string(yytext); return T_lessthanequal_op; }
+[>][=]    { yylval.string = new std::string(yytext); return T_greaterthanequal_op; }
+[<][=]    { yylval.string = new std::string(yytext); return T_lessthanequal_op; }
 [>]     { yylval.string = new std::string(yytext); return T_greaterthan_op; }
 [<]     { yylval.string = new std::string(yytext); return T_lessthan_op; }
-[<>][<>]	{ yylval.string = new std::string(yytext); return T_shift; }
+[<|>][<|>]	{ yylval.string = new std::string(yytext); return T_shift; }
 [*] 		{ yylval.string = new std::string(yytext); return T_mult; }
 [\/]		{ yylval.string = new std::string(yytext); return T_div; }
 [%]		{ yylval.string = new std::string(yytext); return T_rem; }

@@ -57,7 +57,7 @@ void yyerror(const char *);
 
 %type <top> TOP
 
-%type <statement> STATEMENT SELECTIONSTATEMENT ITERATIONSTATEMENT EXPRESSIONSTATEMENT RETURNSTATEMENT
+%type <statement> STATEMENT SELECTIONSTATEMENT ITERATIONSTATEMENT EXPRESSIONSTATEMENT RETURNSTATEMENT VARIABLEDEFINITIONSTATEMENT
 
 %type <type>     TYPE
 
@@ -118,6 +118,7 @@ STATEMENT : ITERATIONSTATEMENT  {$$ = $1;}
           | RETURNSTATEMENT     {$$ = $1;}
           | SELECTIONSTATEMENT  {$$ = $1;}
           | EXPRESSIONSTATEMENT {$$ = $1;}
+          |VARIABLEDEFINITIONSTATEMENT {$$ = $1;}
           | T_rcb               {$$ = nullptr;}
           | T_lcb STATEMENT     {$$ = $2;}
           ;
@@ -135,6 +136,8 @@ ITERATIONSTATEMENT  : T_while T_lrb EXPRESSION T_rrb STATEMENT STATEMENT {$$ = n
                     | T_do STATEMENT T_while T_lrb EXPRESSION T_rrb T_sc STATEMENT {$$ = new DoWhileLoopStatement($5,$2,$8);}
                     | T_for T_lrb EXPRESSION T_sc EXPRESSION T_sc EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ForLoopStatement($3,$5,$7,$9,$10);}
                     ;
+VARIABLEDEFINITIONSTATEMENT : TYPE T_identifier T_sc STATEMENT                      {$$ = new VariableDefinition(new Decleration($1,$2),$4);}
+                            | TYPE T_identifier ASSIGN_OP EXPRESSION T_sc STATEMENT {$$ = new VariableDefinition(new Decleration($1,$2,$4),$6);}
 
 EXPRESSION : ASSIGNEXPRESSION {$$ = $1;}
            ;
@@ -204,7 +207,7 @@ EXCLUSIVEOREXP : ANDEXP {$$ = $1 ;}
                ;
 
 ANDEXP         : EQUALITYEXP {$$ = $1 ;}
-               | ANDEXP T_and EQUALITYEXP { $$ = new LogicalAndOperator($1,$3) ;}
+               | ANDEXP T_and EQUALITYEXP { $$ = new BitwiseAndOperator($1,$3) ;}
                ;
 
 EQUALITYEXP    : RELATIONALEXP {$$ = $1 ;}
