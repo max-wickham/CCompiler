@@ -60,6 +60,15 @@ class FloatConstant: public Expression{
     Type*  getType(Bindings *bindings) override;
 };
 
+class UnsignedConstant: public Expression{
+    protected:
+    unsigned int value;
+    public:
+    UnsignedConstant(unsigned int value);
+    void printASM(Bindings *bindings) override;
+    Type*  getType(Bindings *bindings) override;
+};
+
 class UnaryOperatorExpression: public Expression{
     protected:
     Expression *expression;
@@ -175,10 +184,18 @@ class ShiftRightOperator: public BinaryOperatorExpression{
     void printASM(Bindings *bindings);
 };
 
+class IndexOperator: public BinaryOperatorExpression{
+    public:
+    using BinaryOperatorExpression::BinaryOperatorExpression;
+    void printASMAssign(Bindings *bindings);
+    void printASM(Bindings *bindings);
+};
+
 class DefreferenceOperator: public UnaryOperatorExpression{
     public:
     using UnaryOperatorExpression::UnaryOperatorExpression;
     void printASM(Bindings *bindings);
+    void printASMAssign(Bindings *bindings);
     Type*  getType(Bindings *bindings);
 };
 

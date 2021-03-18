@@ -51,13 +51,18 @@ class IfElseStatement: public Statement{
 
 class ForLoopStatement: public Statement{
     protected:
-    Expression *definition;
+    Decleration *definitionDec;
+    Expression *definitionExp;
     Expression *condition;
     Expression *incrementer;
     Statement *statement;
 
     public:
+    ForLoopStatement(Decleration *definition, Expression *condition, Expression *incrementer,
+        Statement *statement, Statement *nextStatement);
     ForLoopStatement(Expression *definition, Expression *condition, Expression *incrementer,
+        Statement *statement, Statement *nextStatement);
+    ForLoopStatement(Expression *condition, Expression *incrementer,
         Statement *statement, Statement *nextStatement);
     void printASM(Bindings* bindings) override;
 

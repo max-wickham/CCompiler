@@ -51,6 +51,9 @@ public:
 	//places the value in the register at the top of the stack
 	virtual void extractFromRegister(Bindings *bindings, RegisterType type) = 0;
 
+	//extract from register and place in the mem address in the address register
+	virtual void extractFromregister(Bindings *bindings, RegisterType type, RegisterType address) = 0;
+
 	//gets the register string from a register type
 	virtual std::string getRegister(RegisterType type) = 0;
 
@@ -161,6 +164,8 @@ public:
 
 	void extractFromRegister(Bindings *bindings, RegisterType type) override;
 
+	void extractFromregister(Bindings *bindings, RegisterType type, RegisterType address) override;
+
 	void saveVariable(Bindings *bindings, std::string id) override;
 
 	void placeVariableOnStack(Bindings *bindings, std::string id) override;
@@ -190,6 +195,8 @@ public:
 
 	void extractFromRegister(Bindings *bindings, RegisterType type);
 
+	void extractFromregister(Bindings *bindings, RegisterType type, RegisterType address) override;
+
 	std::string getRegister(RegisterType type) override;
 	
 	void saveVariable(Bindings *bindings, std::string id);
@@ -207,8 +214,17 @@ public:
 	Pointer(Type *type);
 
 	void defreference(Bindings *bindings);
-
+	void storeDereference(Bindings *bindings);
+	virtual void initialise(Bindings *bindings);
 	Type* getType();
+};
+
+class Array : public Pointer {
+protected:
+	int size;
+public:
+	Array(Type *type, int size);
+	void initialise(Bindings *bindings);
 };
 
 class Float : public OperandType {
@@ -230,6 +246,8 @@ public:
 	void placeInRegister(Bindings *bindings, RegisterType type) override;
 
 	void extractFromRegister(Bindings *bindings, RegisterType type) override;
+
+	void extractFromregister(Bindings *bindings, RegisterType type, RegisterType address) override;
 
 	std::string getRegister(RegisterType type) override;
 

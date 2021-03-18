@@ -29,7 +29,7 @@ std::string IntegralType::getAdditionOperator(){
 }
 
 std::string IntegralType::getSubtractionOperator(){
-    return "subbu";
+    return "sub";
 }
 
 std::string IntegralType::getMultiplicationOperator(){
@@ -150,6 +150,11 @@ void Int::extractFromRegister(Bindings *bindings, RegisterType type){
         << "," << bindings->currentOffset() << "($fp)" << std::endl;
 }
 
+void Int::extractFromregister(Bindings *bindings, RegisterType type, RegisterType address){
+    std::cout << "sw    " << this->getRegister(type) 
+        << "," << "0" << "(" << this->getRegister(address) << ")" << std::endl;
+}
+
 void Int::saveVariable(Bindings *bindings, std::string id){
     std::cout << "lw    " << this->getRegister(RegisterType::evaluateReg) << ","
         << bindings->currentOffset() << "($fp)" << std::endl;
@@ -188,6 +193,43 @@ void Pointer::defreference(Bindings *bindings){
 Type* Pointer::getType(){
     return type;
 }
+
+void Pointer::storeDereference(Bindings *bindings){
+    //get the variable on the stack and put it in the evaluate register
+    std::cout << "lw    " << type->getRegister(RegisterType::leftReg) << ","
+        << bindings->currentOffset() << "($fp)" << std::endl;
+    //store the pointed address in the evaluate register
+    std::cout << "lw    " << type->getRegister(RegisterType::leftReg) << ","
+        << bindings->currentOffset() << "($fp)" << std::endl;
+}
+
+void Pointer::initialise(Bindings *bindings){
+    //save the bindings offset at the bindings offset
+    bindings->setOffset(bindings->currentOffset() - 4);
+    NumberConstant *constant = new NumberConstant(bindings->currentOffset()+4);
+    constant->printASM(bindings);
+    bindings->setOffset(bindings->currentOffset() + 4);
+    delete constant;
+    int size = type->getSize();
+    bindings->setOffset(bindings->currentOffset() + size);
+}
+//array
+Array::Array(Type *type, int size){
+    this->type = type;
+    this->size = size;
+}
+
+void Array::initialise(Bindings *bindings){
+    //save the bindings offset at the bindings offset
+    bindings->setOffset(bindings->currentOffset() - 4);
+    NumberConstant *constant = new NumberConstant(bindings->currentOffset()+4);
+    constant->printASM(bindings);
+    bindings->setOffset(bindings->currentOffset() + 4);
+    delete constant;
+    int total = type->getSize()*size;
+    bindings->setOffset(bindings->currentOffset() + total);
+}
+
 //char
 Char::Char(){}
 //-> check this is correct
@@ -245,6 +287,13 @@ void Char::extractFromRegister(Bindings *bindings, RegisterType type) {
         << "," << this->getRegister(type) << ",255" << std::endl;
     std::cout << "sw    " << this->getRegister(type) 
         << "," << bindings->currentOffset() << "($fp)" << std::endl;
+}
+//-> check this is correct --> different from int
+void Char::extractFromregister(Bindings *bindings, RegisterType type, RegisterType address){
+    std::cout << "andi " << this->getRegister(type)
+        << "," << this->getRegister(type) << ",255" << std::endl;
+    std::cout << "sw    " << this->getRegister(type) 
+        << "," << "0" << "(" << this->getRegister(address) << ")" << std::endl;
 }
 //-> check this is correct
 void Char::saveVariable(Bindings *bindings, std::string id) {
@@ -309,6 +358,14 @@ void Float::loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings){
         std::cout << "s.s      $f14," <<  bindings->currentOffset() << "($sp)" << std::endl;
         returnRegisters.f14 = true;
     }
+    else if(returnRegisters.a2 == false){
+        std::cout << "sw      $a2," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.a2 = true;
+    }
+    else if(returnRegisters.a3 == false){
+        std::cout << "sw      $a3," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.a3 = true;
+    }
     else{
         std::cout << "l.s      " << this->getRegister(RegisterType::evaluateReg) 
             << "," <<  returnRegisters.currentMemOffset << "($sp)" << std::endl;
@@ -336,6 +393,11 @@ void Float::placeInRegister(Bindings *bindings, RegisterType type){
 void Float::extractFromRegister(Bindings *bindings, RegisterType type){
     std::cout << "s.s    " << this->getRegister(type) 
         << "," << bindings->currentOffset() << "($fp)" << std::endl;
+}
+
+void Float::extractFromregister(Bindings *bindings, RegisterType type, RegisterType address){
+    std::cout << "s.s    " << this->getRegister(type) 
+        << "," << "0" << "(" << this->getRegister(address) << ")" << std::endl;
 }
 //-> check this is correct
 std::string Float::getRegister(RegisterType type){

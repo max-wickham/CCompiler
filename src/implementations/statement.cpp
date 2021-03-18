@@ -3,6 +3,7 @@
 #include "node.hpp"
 #include "expression.hpp"
 class Decleration;
+#include "statement.hpp"
 
 ScopedStatement::ScopedStatement(Statement *statement, Statement *nextStatement){
     this->statement = statement;
@@ -66,7 +67,9 @@ void WhileLoopStatement::printASM(Bindings* bindings){
         << ", $zero, " << endLabel << std::endl;
     //run the statement
     bindings->addScope();
-    statement->printASM(bindings);
+    if(statement != nullptr){
+        statement->printASM(bindings);
+    }
     bindings->deleteScope();
     //jump back to the begining
     std::cout << "j " << beginLabel << std::endl;
@@ -76,9 +79,26 @@ void WhileLoopStatement::printASM(Bindings* bindings){
     }
 }
 
+ForLoopStatement::ForLoopStatement(Decleration *definition, Expression *condition, Expression *incrementer,
+        Statement *statement, Statement *nextStatement){
+    this->definitionDec = definition;
+    this->condition = condition;
+    this->incrementer = incrementer;
+    this->statement = statement;
+    this->nextStatement = nextStatement;
+}
+
 ForLoopStatement::ForLoopStatement(Expression *definition, Expression *condition, Expression *incrementer,
         Statement *statement, Statement *nextStatement){
-    this->definition = definition;
+    this->definitionExp = definition;
+    this->condition = condition;
+    this->incrementer = incrementer;
+    this->statement = statement;
+    this->nextStatement = nextStatement;
+}
+
+ForLoopStatement::ForLoopStatement(Expression *condition, Expression *incrementer,
+        Statement *statement, Statement *nextStatement){
     this->condition = condition;
     this->incrementer = incrementer;
     this->statement = statement;
@@ -90,8 +110,17 @@ void ForLoopStatement::printASM(Bindings* bindings){
     std::string beginLabel = bindings->createLabel("begin");
     bindings->setBreak(endLabel);
     bindings->setContinue(beginLabel);
+    bindings->addScope();
     //firstly create the definded varaible
-    definition->printASM(bindings);
+    if(definitionDec != nullptr){
+        VariableDefinition *variable = new VariableDefinition(definitionDec,nullptr);
+        variable->printASM(bindings);
+        delete variable;
+    }
+    if(definitionExp != nullptr){
+        definitionExp->printASM(bindings);
+    }
+    //definition->printASM(bindings);
     std::cout << beginLabel << ":";
     //check that the condition is true
     condition->printASM(bindings);
@@ -101,13 +130,16 @@ void ForLoopStatement::printASM(Bindings* bindings){
         << ", $zero, " << endLabel << std::endl;
     //run the statement
     bindings->addScope();
-    statement->printASM(bindings);
+    if(statement != nullptr){
+        statement->printASM(bindings);
+    }
     bindings->deleteScope();
     //run the incrementer
     incrementer->printASM(bindings);
     //jump back to the begining
     std::cout << "j " << beginLabel << std::endl;
     std::cout << endLabel << ":";
+    bindings->deleteScope();
     if(nextStatement != nullptr){
         this->nextStatement->printASM(bindings);
     }
@@ -134,7 +166,9 @@ void IfElseStatement::printASM(Bindings* bindings){
     std::cout << "j " << endElseLabel << std::endl;
     std::cout << elseLabel << ":";
     bindings->addScope();
-    elseStatement->printASM(bindings);
+    if(elseStatement != nullptr){
+        elseStatement->printASM(bindings);
+    }
     bindings->deleteScope();
     std::cout << endElseLabel << ":";
     if(nextStatement != nullptr){
@@ -167,6 +201,9 @@ void VariableDefinition::printASM(Bindings *bindings){
         assignment->printASM(bindings);
         delete variable;
         delete assignment;
+    }
+    if(dynamic_cast<Pointer*>(decleration->type) != nullptr){
+        ((Pointer*)decleration->type)->initialise(bindings);
     }
     if(nextStatement != nullptr){
         this->nextStatement->printASM(bindings);

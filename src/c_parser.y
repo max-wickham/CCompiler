@@ -65,7 +65,7 @@ void yyerror(const char *);
 
 %type <expression> EXPRESSION CONSTANT PRIMARYEXP ARGUMENT POSTFIXEXP UNARYEXP MULTEXP ADDEXP 
                    SHIFTEXP EQUALITYEXP RELATIONALEXP ANDEXP  EXCLUSIVEOREXP 
-                   INCLUSIVEOREXP LOGICALANDEXP LOGICALOREXP CONDEXP ASSIGNEXPRESSION  
+                   INCLUSIVEOREXP LOGICALANDEXP LOGICALOREXP CONDEXP ASSIGNEXPRESSION DEREFERENCEEXPRESSION
 
 %type	<string>	T_identifier ASSIGN_OP T_assignment_op T_equal T_and T_add T_sub T_tilde T_not
 			          T_mult T_div T_rem T_logical_equality T_logical_inequality T_greaterthanequal_op 
@@ -97,6 +97,8 @@ FUNCTION : TYPE T_identifier PARAMETER STATEMENT {$$ = new Function(new Declerat
 
 PARAMETER     : TYPE T_identifier T_rrb             {$$ = new ParameterDefinition(new Decleration($1,$2),nullptr) ; std::cout << "";}
               | TYPE T_identifier T_comma PARAMETER {$$ = new ParameterDefinition(new Decleration($1,$2),$4); std::cout << "";}
+              | TYPE T_mult T_identifier T_rrb             {$$ = new ParameterDefinition(new Decleration(new Pointer($1),$3),nullptr) ; std::cout << "";}
+              | TYPE T_mult T_identifier T_comma PARAMETER {$$ = new ParameterDefinition(new Decleration(new Pointer($1),$3),$5); std::cout << "";}
               | T_lrb PARAMETER                     {$$ = $2;}
               | T_lrb T_rrb                         {$$ = nullptr;}
               ;
@@ -112,6 +114,7 @@ TYPE     : T_void            {$$ = new Void();}
          | T_long TYPE       {$$ = new Int();}
          | T_unsigned TYPE   {$$ = $2; $2->setUnSigned();}
          | T_signed TYPE     {$$ = $2;}
+         | TYPE T_mult       {$$ = new Pointer($1);}
          ;
 
 STATEMENT : ITERATIONSTATEMENT  {$$ = $1;}
@@ -135,13 +138,24 @@ SELECTIONSTATEMENT  : T_if T_lrb EXPRESSION T_rrb STATEMENT STATEMENT           
 
 ITERATIONSTATEMENT  : T_while T_lrb EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new WhileLoopStatement($3,$5,$6) ;}
                     | T_do STATEMENT T_while T_lrb EXPRESSION T_rrb T_sc STATEMENT {$$ = new DoWhileLoopStatement($5,$2,$8);}
-                    | T_for T_lrb EXPRESSION T_sc EXPRESSION T_sc EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ForLoopStatement($3,$5,$7,$9,$10);}
+                    | T_for T_lrb T_sc EXPRESSION T_sc EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ForLoopStatement($4,$6,$8,$9);}
+                    | T_for T_lrb TYPE T_identifier T_sc EXPRESSION T_sc EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ForLoopStatement(new Decleration($3,$4),$6,$8,$10,$11);}
+                    | | T_for T_lrb EXPRESSION T_sc EXPRESSION T_sc EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ForLoopStatement($3,$5,$7,$9,$10);}
+                    | T_for T_lrb TYPE T_identifier ASSIGN_OP EXPRESSION T_sc EXPRESSION T_sc EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ForLoopStatement(new Decleration($3,$4,$6),$8,$10,$12,$13);}
                     ;
 VARIABLEDEFINITIONSTATEMENT : TYPE T_identifier T_sc STATEMENT                      {$$ = new VariableDefinition(new Decleration($1,$2),$4);}
                             | TYPE T_identifier ASSIGN_OP EXPRESSION T_sc STATEMENT {$$ = new VariableDefinition(new Decleration($1,$2,$4),$6);}
+                            | TYPE T_mult T_identifier T_sc STATEMENT                      {$$ = new VariableDefinition(new Decleration(new Pointer($1),$3),$5);}
+                            | TYPE T_mult T_identifier ASSIGN_OP EXPRESSION T_sc STATEMENT {$$ = new VariableDefinition(new Decleration(new Pointer($1),$3,$5),$7);}
+                            ;
 
-EXPRESSION : ASSIGNEXPRESSION {$$ = $1;}
+EXPRESSION : DEREFERENCEEXPRESSION {$$ = $1;}
            ;
+
+
+DEREFERENCEEXPRESSION : ASSIGNEXPRESSION {$$ = $1;}
+                      | T_mult PRIMARYEXP {$$ = new DefreferenceOperator($2);}
+                      ;
 
 
 ASSIGNEXPRESSION : CONDEXP {$$ = $1;}
@@ -248,7 +262,7 @@ UNARYEXP       : POSTFIXEXP {$$ = $1;}
                ;
 
 POSTFIXEXP     : PRIMARYEXP { $$ = $1; }
-               | POSTFIXEXP T_lsb EXPRESSION T_rsb {} ////////////////////////
+               | POSTFIXEXP T_lsb EXPRESSION T_rsb {$$ = new IndexOperator($1,$3);} ////////////////////////
                | POSTFIXEXP T_dot T_identifier { ;}     ////////////////////////
                | POSTFIXEXP T_arrow T_identifier {}        ////////////////////////
                | POSTFIXEXP T_inc {$$ = new AssignmentOperator($1,new AdditionOperator($1,new NumberConstant(1)));}               ////////////////////////
