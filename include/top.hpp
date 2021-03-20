@@ -15,6 +15,7 @@ class Top : public Node{
     Top();
     void printASM();
     void addFunction(Function *function);
+    void addGlobal(VariableDefinition *definition);
 };
 
 #endif

@@ -49,7 +49,7 @@ void yyerror(const char *);
 			T_void T_char T_short T_int T_long T_float T_double T_signed T_unsigned
 			T_typedef T_static 
 			T_volatile T_goto T_break T_continue
-			T_case T_default T_switch T_ellipsis T_stringliteral
+			T_case T_default T_switch T_ellipsis T_stringliteral T_float_const T_double_constant
 			
 %nonassoc		T_rrb
 %nonassoc		T_else
@@ -57,21 +57,24 @@ void yyerror(const char *);
 
 %type <top> TOP
 
-%type <statement> STATEMENT SELECTIONSTATEMENT ITERATIONSTATEMENT EXPRESSIONSTATEMENT RETURNSTATEMENT VARIABLEDEFINITIONSTATEMENT
+%type <statement> STATEMENT SELECTIONSTATEMENT ITERATIONSTATEMENT EXPRESSIONSTATEMENT CASESTATEMENT SWITCHSTATEMENT
+                  RETURNSTATEMENT VARIABLEDEFINITIONSTATEMENT GLOBALVARIABLE BREAKSTATEMENT CONTINUESTATEMENT
 
 %type <type>     TYPE
 
 %type<parameterDefinition> PARAMETER
 
-%type <expression> EXPRESSION CONSTANT PRIMARYEXP ARGUMENT POSTFIXEXP UNARYEXP MULTEXP ADDEXP 
+%type <expression> EXPRESSION CONSTANT PRIMARYEXP POSTFIXEXP UNARYEXP MULTEXP ADDEXP 
                    SHIFTEXP EQUALITYEXP RELATIONALEXP ANDEXP  EXCLUSIVEOREXP 
                    INCLUSIVEOREXP LOGICALANDEXP LOGICALOREXP CONDEXP ASSIGNEXPRESSION DEREFERENCEEXPRESSION
+
+%type <parameter> ARGUMENT
 
 %type	<string>	T_identifier ASSIGN_OP T_assignment_op T_equal T_and T_add T_sub T_tilde T_not
 			          T_mult T_div T_rem T_logical_equality T_logical_inequality T_greaterthanequal_op 
                 T_lessthanequal_op T_greaterthan_op T_lessthan_op T_shift T_inc T_dec T_stringliteral  
                 T_rsb T_lsb T_rrb T_lrb T_sizeof T_logical_and  T_logical_or T_qm T_colon T_sc T_long  
-                T_typedef T_double  T_short T_void T_const
+                T_typedef T_double  T_short T_void T_const T_float_const T_double_constant
 
                   
 %type <function> FUNCTION
@@ -89,16 +92,22 @@ ROOT : TOP {g_root = $1; }
      ;
 
 TOP  : FUNCTION {$$ = new Top(); $$->addFunction($1);}
-     | TOP FUNCTION{$$->addFunction($2);}    
+     | GLOBALVARIABLE {{$$ = new Top(); $$->addGlobal((VariableDefinition*)$1);}}
+     | TOP FUNCTION {$$->addFunction($2);}    
+     | TOP GLOBALVARIABLE {$$->addGlobal((VariableDefinition*)$2);}
      ;
+
+GLOBALVARIABLE : TYPE T_identifier T_sc  {$$ = new VariableDefinition(new Decleration($1,$2),nullptr);}
+               | TYPE T_identifier T_equal EXPRESSION T_sc {$$ = new VariableDefinition(new Decleration($1,$2,$4),nullptr);std::cout << "";}
+               | TYPE T_identifier T_lsb T_int_const T_rsb T_sc {$$ = new VariableDefinition(new Decleration(new Array($1,$4),$2),nullptr);}      
+               ;
+
     
 FUNCTION : TYPE T_identifier PARAMETER STATEMENT {$$ = new Function(new Decleration($1,$2),$4,$3);}
          ;
 
 PARAMETER     : TYPE T_identifier T_rrb             {$$ = new ParameterDefinition(new Decleration($1,$2),nullptr) ; std::cout << "";}
               | TYPE T_identifier T_comma PARAMETER {$$ = new ParameterDefinition(new Decleration($1,$2),$4); std::cout << "";}
-              | TYPE T_mult T_identifier T_rrb             {$$ = new ParameterDefinition(new Decleration(new Pointer($1),$3),nullptr) ; std::cout << "";}
-              | TYPE T_mult T_identifier T_comma PARAMETER {$$ = new ParameterDefinition(new Decleration(new Pointer($1),$3),$5); std::cout << "";}
               | T_lrb PARAMETER                     {$$ = $2;}
               | T_lrb T_rrb                         {$$ = nullptr;}
               ;
@@ -109,26 +118,35 @@ TYPE     : T_void            {$$ = new Void();}
          | T_short           {$$ = new Int();}
          | T_long            {$$ = new Int();}
          | T_float           {$$ = new Float();}
-         | T_double          {$$ = new Float();}
+         | T_double          {$$ = new Double();}
          | T_typedef         {$$ = new Int();}
          | T_long TYPE       {$$ = new Int();}
          | T_unsigned TYPE   {$$ = $2; $2->setUnSigned();}
+         | T_unsigned        {Int* x = new Int(); x->setUnSigned(); $$ = x;}
          | T_signed TYPE     {$$ = $2;}
-         | TYPE T_mult       {$$ = new Pointer($1);}
+         | TYPE T_mult       {$$ = new Pointer($1); std::cout << "";}
          ;
 
 STATEMENT : ITERATIONSTATEMENT  {$$ = $1;}
           | RETURNSTATEMENT     {$$ = $1;}
           | SELECTIONSTATEMENT  {$$ = $1;}
-          | EXPRESSIONSTATEMENT {$$ = $1;}
-          |VARIABLEDEFINITIONSTATEMENT {$$ = $1;}
-          | T_rcb               {$$ = nullptr;}
+          | EXPRESSIONSTATEMENT {$$ = $1; std::cout << "";}
+          | VARIABLEDEFINITIONSTATEMENT {$$ = $1; std::cout << "";}
+          | T_rcb               {$$ = nullptr; std::cout << "";}
           | T_lcb STATEMENT     {$$ = $2;}
+          | BREAKSTATEMENT      {$$ = $1;}
+          | CONTINUESTATEMENT   {$$ = $1;}
+          | SWITCHSTATEMENT     {$$ = $1;}
+          | CASESTATEMENT       {$$ = $1;}
           ;
+
+BREAKSTATEMENT      : T_break T_sc STATEMENT {$$ = new BreakStatement($3);}
+
+CONTINUESTATEMENT   : T_continue T_sc STATEMENT {$$ = new ContinueStatement($3);}
 
 RETURNSTATEMENT     : T_return EXPRESSION  T_sc STATEMENT {$$ = new ReturnStatement($2,$4); std::cout << "";}
 
-EXPRESSIONSTATEMENT : EXPRESSION T_sc STATEMENT {$$ = new ExpressionStatement($1,$3);}
+EXPRESSIONSTATEMENT : EXPRESSION T_sc STATEMENT {$$ = new ExpressionStatement($1,$3); std::cout << "";}
                     ;
 
 SELECTIONSTATEMENT  : T_if T_lrb EXPRESSION T_rrb STATEMENT STATEMENT                   {$$ = new IfElseStatement($3,$5,nullptr,$6);}            
@@ -140,28 +158,30 @@ ITERATIONSTATEMENT  : T_while T_lrb EXPRESSION T_rrb STATEMENT STATEMENT {$$ = n
                     | T_do STATEMENT T_while T_lrb EXPRESSION T_rrb T_sc STATEMENT {$$ = new DoWhileLoopStatement($5,$2,$8);}
                     | T_for T_lrb T_sc EXPRESSION T_sc EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ForLoopStatement($4,$6,$8,$9);}
                     | T_for T_lrb TYPE T_identifier T_sc EXPRESSION T_sc EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ForLoopStatement(new Decleration($3,$4),$6,$8,$10,$11);}
-                    | | T_for T_lrb EXPRESSION T_sc EXPRESSION T_sc EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ForLoopStatement($3,$5,$7,$9,$10);}
+                    | T_for T_lrb EXPRESSION T_sc EXPRESSION T_sc EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ForLoopStatement($3,$5,$7,$9,$10);}
                     | T_for T_lrb TYPE T_identifier ASSIGN_OP EXPRESSION T_sc EXPRESSION T_sc EXPRESSION T_rrb STATEMENT STATEMENT {$$ = new ForLoopStatement(new Decleration($3,$4,$6),$8,$10,$12,$13);}
                     ;
 VARIABLEDEFINITIONSTATEMENT : TYPE T_identifier T_sc STATEMENT                      {$$ = new VariableDefinition(new Decleration($1,$2),$4);}
-                            | TYPE T_identifier ASSIGN_OP EXPRESSION T_sc STATEMENT {$$ = new VariableDefinition(new Decleration($1,$2,$4),$6);}
-                            | TYPE T_mult T_identifier T_sc STATEMENT                      {$$ = new VariableDefinition(new Decleration(new Pointer($1),$3),$5);}
-                            | TYPE T_mult T_identifier ASSIGN_OP EXPRESSION T_sc STATEMENT {$$ = new VariableDefinition(new Decleration(new Pointer($1),$3,$5),$7);}
+                            | TYPE T_identifier T_equal EXPRESSION T_sc STATEMENT {$$ = new VariableDefinition(new Decleration($1,$2,$4),$6);std::cout << "";}
+                            | TYPE T_identifier T_lsb T_int_const T_rsb T_sc STATEMENT {$$ = new VariableDefinition(new Decleration(new Array($1,$4),$2),$7);}      
                             ;
 
-EXPRESSION : DEREFERENCEEXPRESSION {$$ = $1;}
+SWITCHSTATEMENT             : T_switch T_lrb EXPRESSION T_rrb T_lcb CASESTATEMENT STATEMENT { $$ = new SwitchStatement($3,$6,$7);}
+                            ;
+
+
+CASESTATEMENT               : T_default T_colon STATEMENT  {$$ = new CaseStatement(nullptr,$3,nullptr); std::cout << "" <<std::endl;}
+                            | T_case CONSTANT T_colon STATEMENT CASESTATEMENT {$$ = new CaseStatement($2,$4,$5); }
+                            | T_case CONSTANT T_colon STATEMENT {$$ = new CaseStatement($2,$4,nullptr); }
+                            ;
+
+EXPRESSION : ASSIGNEXPRESSION {$$ = $1;}
            ;
-
-
-DEREFERENCEEXPRESSION : ASSIGNEXPRESSION {$$ = $1;}
-                      | T_mult PRIMARYEXP {$$ = new DefreferenceOperator($2);}
-                      ;
-
 
 ASSIGNEXPRESSION : CONDEXP {$$ = $1;}
            | UNARYEXP ASSIGN_OP ASSIGNEXPRESSION {  
              if(*$2 == "="){
-               $$ = new AssignmentOperator($1,$3);std::cout << "";
+               $$ = new AssignmentOperator($1,$3);std::cout <<  "";
              }
              else if(*$2 == "+="){
                {$$ = new AssignmentOperator($1,new AdditionOperator($1,$3));}
@@ -195,8 +215,8 @@ ASSIGNEXPRESSION : CONDEXP {$$ = $1;}
              }
            }
 
-ASSIGN_OP   :	T_assignment_op { ; }
-	          |	T_equal { ; }
+ASSIGN_OP   :	T_assignment_op {$$ = $1 ;}
+	          |	T_equal { $$ = $1 ; std::cout <<  "";}
 	          ;
 
 CONDEXP    : LOGICALOREXP {$$ = $1;}
@@ -251,15 +271,21 @@ MULTEXP        : UNARYEXP {$$ = $1;}
                | MULTEXP T_rem  MULTEXP { $$ = new ModuloOperator($1,$3); } 
                ; 
 
-UNARYEXP       : POSTFIXEXP {$$ = $1;}
+UNARYEXP       : DEREFERENCEEXPRESSION {$$ = $1;}
                | T_inc UNARYEXP   {$$ = new AssignmentOperator($2,new AdditionOperator($2,new NumberConstant(1)));}   
                | T_dec UNARYEXP   {$$ = new AssignmentOperator($2,new SubtractionOperator($2,new NumberConstant(1)));} 
                | T_sizeof UNARYEXP {$$ = $2;}        /////////////////////////////////////
                | T_sizeof T_lrb EXPRESSION T_rrb {$$ = new SizeOfOperator($3);} ///////////////////////////////////
                | T_sub UNARYEXP   { $$ = new MultiplicationOperator($2,new NumberConstant(-1)); }
                | T_not UNARYEXP   { $$ = new NotOperator($2); }   
-               | T_and UNARYEXP   { $$ = new AddressOperator($2); }   
+               | T_and UNARYEXP   { $$ = new AddressOperator($2); std::cout << "";}
+               | T_identifier T_lrb ARGUMENT { $$ = new FunctionCall($1,$3);}
+
                ;
+
+DEREFERENCEEXPRESSION : POSTFIXEXP {$$ = $1;}
+                      | T_mult PRIMARYEXP {$$ = new DefreferenceOperator($2);  std::cout << "";}
+                      ;
 
 POSTFIXEXP     : PRIMARYEXP { $$ = $1; }
                | POSTFIXEXP T_lsb EXPRESSION T_rsb {$$ = new IndexOperator($1,$3);} ////////////////////////
@@ -270,7 +296,7 @@ POSTFIXEXP     : PRIMARYEXP { $$ = $1; }
                ;
 
 ARGUMENT       : EXPRESSION T_rrb {$$ = new Parameter($1,nullptr);}
-               | EXPRESSION ARGUMENT T_rrb {$$ = new Parameter($1,$2);}
+               | EXPRESSION T_comma ARGUMENT {$$ = new Parameter($1,$3);}
                ;
 
 PRIMARYEXP     : T_identifier           {$$ = new Variable($1); std::cout << "";}
@@ -280,7 +306,9 @@ PRIMARYEXP     : T_identifier           {$$ = new Variable($1); std::cout << "";
                ;
 
 CONSTANT       : T_int_const {$$ = new NumberConstant($1);}
-               ;
+               | T_float_const {$$ = new FloatConstant(std::stof($1->substr(0,$1->length())));}
+               | T_double_constant {$$ = new DoubleConstant(std::stof($1->substr(0,$1->length())));}
+               ; 
 
  
 %%

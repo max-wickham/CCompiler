@@ -7,6 +7,7 @@
 #include "parameter.hpp"
 #include "bindings.hpp"
 #include <string>
+#include <map>
 
 class Function: public Node{
     protected:
@@ -18,6 +19,7 @@ class Function: public Node{
     Function(Decleration *decleration, Statement* statement,
         ParameterDefinition *firstParameter);
     void printASM(Bindings *bindings);
+    void addToMap(std::map<std::string, Type*> &functionMap);
 };
 
 #endif

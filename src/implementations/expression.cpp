@@ -4,6 +4,7 @@
 #include "parameter.hpp"
 #include <iostream>
 class Bindings;
+#include <math.h> 
 
 UnaryOperatorExpression::UnaryOperatorExpression(Expression *expression){
     this->expression = expression;
@@ -15,32 +16,41 @@ FunctionCall::FunctionCall(std::string *id, Parameter *parameter){
 }
 
 void FunctionCall::printASM(Bindings *bindings){
+    //std::cout << "function call" << std::endl;
     //first put the parameters into memory in order
     std::string params = "";
+    ReturnRegisters returnRegister;
+    int total = 0;
     if(parameter != nullptr){
+        //std::cout << "loading param" << std::endl;
         //create the label string needed to find where to jump to
-        parameter->createLabel(params, bindings);
+        //parameter->createLabel(params, bindings);
         //calculate the total needed memory
         int mem = 0;
         parameter->calculateTotalMem(mem, bindings);
+        total = mem;
         //place the parameters on the stack
-        parameter->placeOnStack(bindings, mem);
+        parameter->placeOnStack(bindings, mem, returnRegister);
         //set the new bindings offset
         bindings->setOffset(bindings->currentOffset() + mem);
+        //std::cout << "loaded param" << std::endl;
     }
     //set the sp to the current bindings offset
-    int upper = (bindings->currentOffset() && 4294901760) >> 16;
-    int lower = (bindings->currentOffset() && 65535);
-    std::cout << "lui    $sp," << upper << std::endl;
-    std::cout << "addi    $sp," << lower << std::endl;
+    //std::cout << bindings->currentOffset() << std::endl;
+    //int upper = (bindings->currentOffset() && 4294901760) >> 16;
+    //int lower = (bindings->currentOffset() && 65535);
+    //std::cout << lower << std::endl;
+    //std::cout << "lui    $sp," << upper << std::endl;
+    //std::cout << "addi    $sp," << lower << std::endl;
+    std::cout << "li    $sp," << (bindings->currentOffset() - total) << std::endl;
     //add stack pointer to the frame pointer
     std::cout << "addu $sp,$sp,$fp" << std::endl;
     //then jump to the function code
-    std::cout << "j     " << id << "(" << params << ")";
-    //then set the return jump label
-    std::cout << bindings->createLabel("functionReturn") << ":";
+    std::cout << "jal     " << id << std::endl;
+    std::cout << "nop " << std::endl;
     //put the return values into the stack
-    bindings->getFunction(id)->processReturn(bindings);
+    //bindings->getFunction(id)->processReturn(bindings);
+    std::cout << "sw    $v0," << bindings->currentOffset() << "($fp)" <<std::endl;
 }
 
 Type*  FunctionCall::getType(Bindings *bindings){
@@ -58,10 +68,31 @@ Type* Variable::getType(Bindings *bindings){
 StringConstant::StringConstant(std::string *value){
     this->value = *value;
 }
-//TODO
-void StringConstant::printASM(Bindings *bindings){}
-//TODO
-Type*  StringConstant::getType(Bindings *bindings){return new Char();}
+//---check
+void StringConstant::printASM(Bindings *bindings){
+    //first reverse the order of the string
+    std::string input = "";
+    for(char &c: value){
+        input = input + c;
+    }
+    //load the values into memory
+    for(char &c: input){
+        NumberConstant *constant = new NumberConstant(c);
+        constant->printASM(bindings);
+        bindings->setOffset(bindings->currentOffset()-1);
+        delete constant;
+    }
+        //store the current mem address in a register
+    std::cout << "li    $t2," << (bindings->currentOffset() + 1) << std::endl;
+    std::cout << "addu    $t2,$t2,$fp" << std::endl;
+    while(bindings->currentOffset() % 4 != 0){
+        bindings->setOffset(bindings->currentOffset()-1);
+    }
+    //load the saved mem address into memory
+    std::cout << "sw    $t2," << bindings->currentOffset() << "($fp)" << std::endl;
+}
+//---check
+Type*  StringConstant::getType(Bindings *bindings){return new Array(new Char(),value.size());}
 
 FloatConstant::FloatConstant(float value){
     this->value = value;
@@ -74,6 +105,19 @@ void FloatConstant::printASM(Bindings *bindings) {
 
 Type*  FloatConstant::getType(Bindings *bindings){
     return new Float();
+}
+
+DoubleConstant::DoubleConstant(double value){
+    this->value = value;
+}
+
+void DoubleConstant::printASM(Bindings *bindings) {
+    std::cout << "li.d $f4," << value << std::endl;
+    std::cout << "s.d    $f4, " << bindings->currentOffset() << "($fp)" << std::endl;
+}
+
+Type*  DoubleConstant::getType(Bindings *bindings){
+    return new Double();
 }
 
 UnsignedConstant::UnsignedConstant(unsigned int value){
@@ -91,7 +135,7 @@ Type*  UnsignedConstant::getType(Bindings *bindings){
     return integer;
 }
 
-NumberConstant::NumberConstant(int value){
+NumberConstant::NumberConstant(int value) {
     this->value = value;
 }
 
@@ -103,7 +147,7 @@ void NumberConstant::printASM(Bindings *bindings){
     else{
         int upper = (value & 4294901760) >> 16;
         int lower = (value & 65535);
-        std::cout << "mv    $v0,$zero" << std::endl;
+        std::cout << "move    $v0,$zero" << std::endl;
         std::cout << "lui    $v0," << upper << std::endl;
         std::cout << "addi    $v0," << lower << std::endl;
         std::cout << "sw    $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
@@ -131,6 +175,7 @@ void EqualityOperator::printASM(Bindings *bindings){
     //    ", " << rightType->getRegister(RegisterType::rightReg) << labelPass <<std::endl;
     std::cout << "li    " << "$v0, 0" <<std::endl;
     std::cout << "j     " << labelEnd <<std::endl;
+    std::cout << "nop " <<std::endl;
     std::cout << ".global " << labelPass <<std::endl;
     std::cout << labelPass << ":" <<std::endl;
     std::cout << "li    " << "$v0, 1" <<std::endl;
@@ -143,10 +188,10 @@ void LessThanOperator::printASM(Bindings *bindings){
     Type* leftType = leftExpression->getType(bindings);
     Type* rightType = rightExpression->getType(bindings);
     leftExpression->printASM(bindings);
-    bindings->setOffset(bindings->currentOffset() - 4);
+    bindings->setOffset(bindings->currentOffset() - leftExpression->getType(bindings)->getSize());
     rightExpression->printASM(bindings);
     rightExpression->getType(bindings)->placeInRegister(bindings, RegisterType::rightReg);
-    bindings->setOffset(bindings->currentOffset() + 4);
+    bindings->setOffset(bindings->currentOffset() + leftExpression->getType(bindings)->getSize());
     leftExpression->getType(bindings)->placeInRegister(bindings, RegisterType::leftReg);
     std::cout << "slt    $v0," << leftType->getRegister(RegisterType::leftReg) << "," <<
         rightType->getRegister(RegisterType::rightReg) <<std::endl;
@@ -160,10 +205,10 @@ void LessThanEqualOperator::printASM(Bindings *bindings){
     Type* leftType = leftExpression->getType(bindings);
     Type* rightType = rightExpression->getType(bindings);
     leftExpression->printASM(bindings);
-    bindings->setOffset(bindings->currentOffset() - 4);
+    bindings->setOffset(bindings->currentOffset() - leftExpression->getType(bindings)->getSize());
     rightExpression->printASM(bindings);
     rightExpression->getType(bindings)->placeInRegister(bindings, RegisterType::rightReg);
-    bindings->setOffset(bindings->currentOffset() + 4);
+    bindings->setOffset(bindings->currentOffset() + leftExpression->getType(bindings)->getSize());
     leftExpression->getType(bindings)->placeInRegister(bindings, RegisterType::leftReg);
     std::cout << "slt    " << leftType->getRegister(RegisterType::evaluateReg)
         <<"," << leftType->getRegister(RegisterType::leftReg) << "," <<
@@ -171,11 +216,13 @@ void LessThanEqualOperator::printASM(Bindings *bindings){
     leftExpression->getType(bindings)->beq(bindings,RegisterType::evaluateReg,RegisterType::zeroReg,labelNext);
     std::cout << "li   $v0,1, "<< labelEnd <<std::endl;
     std::cout << "j     " << labelEnd <<std::endl;
+    std::cout << "nop " <<std::endl;
     std::cout << ".global " << labelNext << std::endl;
     std::cout << labelNext << ":" <<std::endl;    
     leftExpression->getType(bindings)->beq(bindings,RegisterType::evaluateReg,RegisterType::zeroReg,labelPass);
     std::cout << "li   $v0,0, "<< labelEnd <<std::endl;
     std::cout << "j     " << labelEnd <<std::endl;
+    std::cout << "nop " <<std::endl;
     std::cout << ".global " << labelPass <<std::endl;
     std::cout << labelPass << ":" <<std::endl;
     std::cout << "li   $v0,1, "<< labelEnd <<std::endl;
@@ -189,26 +236,40 @@ void AssignmentOperator::printASM(Bindings *bindings){
     //this will be different for pointer than it is for none pointer types
     rightExpression->printASM(bindings);
     if (dynamic_cast<DefreferenceOperator*>(leftExpression) != nullptr){
+        //std::cout << "dereference assign --------" << std::endl;
         ((DefreferenceOperator*)leftExpression)->printASMAssign(bindings);
+        //std::cout << "end dereference assign --------" << std::endl;
     }
     else if (dynamic_cast<IndexOperator*>(leftExpression) != nullptr)
     {
         ((IndexOperator*)leftExpression)->printASMAssign(bindings);
     }
     else{
+        //std::cout << "assign --------" << std::endl;
         leftExpression->getType(bindings)->saveVariable(bindings,((Variable*)leftExpression)->getName());
+        //std::cout << "end assign --------" << std::endl;
     }
 }
 
 void AdditionOperator::printASM(Bindings *bindings){
     //std::cout << "add ---->" << std::endl;
     //first evaluate left hand expression and place in register, the print asm places the value at the top of the stack
+    
     leftExpression->printASM(bindings);
-    bindings->setOffset(bindings->currentOffset() - 4);
+    bindings->setOffset(bindings->currentOffset() - leftExpression->getType(bindings)->getSize());
     rightExpression->printASM(bindings);
     rightExpression->getType(bindings)->placeInRegister(bindings, RegisterType::rightReg);
-    bindings->setOffset(bindings->currentOffset() + 4);
+    bindings->setOffset(bindings->currentOffset() + leftExpression->getType(bindings)->getSize());
     leftExpression->getType(bindings)->placeInRegister(bindings, RegisterType::leftReg);
+    std::string reg = rightExpression->getType(bindings)->getRegister(RegisterType::rightReg);
+    if (dynamic_cast<Pointer*>(leftExpression->getType(bindings)) != nullptr){
+       if (dynamic_cast<Pointer*>(rightExpression->getType(bindings)) == nullptr){
+            if (dynamic_cast<Char*>(((Pointer*)leftExpression->getType(bindings))->getType()) == nullptr){
+                int shift = log2(((Pointer*)leftExpression->getType(bindings))->getType()->getSize());
+                std::cout << "sll    " << reg << "," << reg << shift << std::endl;
+            }
+        } 
+    }
     //next add the two registers and place in evaluation register
     std::string evalReg = leftExpression->getType(bindings)->getRegister(RegisterType::evaluateReg);
     std::string leftReg = leftExpression->getType(bindings)->getRegister(RegisterType::leftReg);
@@ -223,10 +284,10 @@ void AdditionOperator::printASM(Bindings *bindings){
 void SubtractionOperator::printASM(Bindings *bindings){
     //first evaluate left hand expression and place in register, the print asm places the value at the top of the stack
     leftExpression->printASM(bindings);
-    bindings->setOffset(bindings->currentOffset() - 4);
+    bindings->setOffset(bindings->currentOffset() - leftExpression->getType(bindings)->getSize());
     rightExpression->printASM(bindings);
     rightExpression->getType(bindings)->placeInRegister(bindings, RegisterType::rightReg);
-    bindings->setOffset(bindings->currentOffset() + 4);
+    bindings->setOffset(bindings->currentOffset() + leftExpression->getType(bindings)->getSize());
     leftExpression->getType(bindings)->placeInRegister(bindings, RegisterType::leftReg);
     //next add the two registers and place in evaluation register
     std::string evalReg = leftExpression->getType(bindings)->getRegister(RegisterType::evaluateReg);
@@ -242,10 +303,10 @@ void MultiplicationOperator::printASM(Bindings *bindings){
     //std::cout << "mul ---->" << std::endl;
     //first evaluate left hand expression and place in register, the print asm places the value at the top of the stack
     leftExpression->printASM(bindings);
-    bindings->setOffset(bindings->currentOffset() - 4);
+    bindings->setOffset(bindings->currentOffset() - leftExpression->getType(bindings)->getSize());
     rightExpression->printASM(bindings);
     rightExpression->getType(bindings)->placeInRegister(bindings, RegisterType::rightReg);
-    bindings->setOffset(bindings->currentOffset() + 4);
+    bindings->setOffset(bindings->currentOffset() + leftExpression->getType(bindings)->getSize());
     leftExpression->getType(bindings)->placeInRegister(bindings, RegisterType::leftReg);
     //next add the two registers and place in evaluation register
     //std::string evalReg = leftExpression->getType(bindings)->getRegister(RegisterType::evaluateReg);
@@ -261,10 +322,10 @@ void MultiplicationOperator::printASM(Bindings *bindings){
 void DivisionOperator::printASM(Bindings *bindings){
     //first evaluate left hand expression and place in register, the print asm places the value at the top of the stack
     leftExpression->printASM(bindings);
-    bindings->setOffset(bindings->currentOffset() - 4);
+    bindings->setOffset(bindings->currentOffset() - leftExpression->getType(bindings)->getSize());
     rightExpression->printASM(bindings);
     rightExpression->getType(bindings)->placeInRegister(bindings, RegisterType::rightReg);
-    bindings->setOffset(bindings->currentOffset() + 4);
+    bindings->setOffset(bindings->currentOffset() + leftExpression->getType(bindings)->getSize());
     leftExpression->getType(bindings)->placeInRegister(bindings, RegisterType::leftReg);
     //next add the two registers and place in evaluation register
     std::string evalReg = leftExpression->getType(bindings)->getRegister(RegisterType::evaluateReg);
@@ -279,10 +340,10 @@ void DivisionOperator::printASM(Bindings *bindings){
 void ModuloOperator::printASM(Bindings *bindings){
     //first evaluate left hand expression and place in register, the print asm places the value at the top of the stack
     leftExpression->printASM(bindings);
-    bindings->setOffset(bindings->currentOffset() - 4);
+    bindings->setOffset(bindings->currentOffset() - leftExpression->getType(bindings)->getSize());
     rightExpression->printASM(bindings);
     rightExpression->getType(bindings)->placeInRegister(bindings, RegisterType::rightReg);
-    bindings->setOffset(bindings->currentOffset() + 4);
+    bindings->setOffset(bindings->currentOffset() + leftExpression->getType(bindings)->getSize());
     leftExpression->getType(bindings)->placeInRegister(bindings, RegisterType::leftReg);
     //next add the two registers and place in evaluation register
     std::string evalReg = leftExpression->getType(bindings)->getRegister(RegisterType::evaluateReg);
@@ -318,7 +379,7 @@ void LogicalAndOperator::printASM(Bindings *bindings){
     std::cout << "li    $v0,1" << std::endl;
     std::cout << "sw    $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
     std::cout << "j   " << endLabel << std::endl;
-    std::cout << "nop" << std::endl;
+    std::cout << "nop " <<std::endl;
     std::cout << ".global " << failLabel << std::endl;
     std::cout << failLabel << ":" << std::endl;
     std::cout << "li    $v0,0" << std::endl;
@@ -367,10 +428,10 @@ void LogicalOrOperator::printASM(Bindings *bindings){
 void BitwiseOrOperator::printASM(Bindings *bindings){
     //first evaluate left hand expression and place in register, the print asm places the value at the top of the stack
     leftExpression->printASM(bindings);
-    bindings->setOffset(bindings->currentOffset() - 4);
+    bindings->setOffset(bindings->currentOffset() - leftExpression->getType(bindings)->getSize());
     rightExpression->printASM(bindings);
     rightExpression->getType(bindings)->placeInRegister(bindings, RegisterType::rightReg);
-    bindings->setOffset(bindings->currentOffset() + 4);
+    bindings->setOffset(bindings->currentOffset() + leftExpression->getType(bindings)->getSize());
     leftExpression->getType(bindings)->placeInRegister(bindings, RegisterType::leftReg);
     //next add the two registers and place in evaluation register
     std::string evalReg = leftExpression->getType(bindings)->getRegister(RegisterType::evaluateReg);
@@ -384,10 +445,10 @@ void BitwiseOrOperator::printASM(Bindings *bindings){
 void BitwiseAndOperator::printASM(Bindings *bindings){
     //first evaluate left hand expression and place in register, the print asm places the value at the top of the stack
     leftExpression->printASM(bindings);
-    bindings->setOffset(bindings->currentOffset() - 4);
+    bindings->setOffset(bindings->currentOffset() - leftExpression->getType(bindings)->getSize());
     rightExpression->printASM(bindings);
     rightExpression->getType(bindings)->placeInRegister(bindings, RegisterType::rightReg);
-    bindings->setOffset(bindings->currentOffset() + 4);
+    bindings->setOffset(bindings->currentOffset() + leftExpression->getType(bindings)->getSize());
     leftExpression->getType(bindings)->placeInRegister(bindings, RegisterType::leftReg);
     //next add the two registers and place in evaluation register
     std::string evalReg = leftExpression->getType(bindings)->getRegister(RegisterType::evaluateReg);
@@ -401,10 +462,10 @@ void BitwiseAndOperator::printASM(Bindings *bindings){
 void BitwiseXorOperator::printASM(Bindings *bindings){
     //first evaluate left hand expression and place in register, the print asm places the value at the top of the stack
     leftExpression->printASM(bindings);
-    bindings->setOffset(bindings->currentOffset() - 4);
+    bindings->setOffset(bindings->currentOffset() - leftExpression->getType(bindings)->getSize());
     rightExpression->printASM(bindings);
     rightExpression->getType(bindings)->placeInRegister(bindings, RegisterType::rightReg);
-    bindings->setOffset(bindings->currentOffset() + 4);
+    bindings->setOffset(bindings->currentOffset() + leftExpression->getType(bindings)->getSize());
     leftExpression->getType(bindings)->placeInRegister(bindings, RegisterType::leftReg);
     //next add the two registers and place in evaluation register
     std::string evalReg = leftExpression->getType(bindings)->getRegister(RegisterType::evaluateReg);
@@ -418,10 +479,10 @@ void BitwiseXorOperator::printASM(Bindings *bindings){
 void ShiftLeftOperator::printASM(Bindings *bindings){
     Type *type = leftExpression->getType(bindings);
     leftExpression->printASM(bindings);
-    bindings->setOffset(bindings->currentOffset() - 4);
+    bindings->setOffset(bindings->currentOffset() - leftExpression->getType(bindings)->getSize());
     rightExpression->printASM(bindings);
     rightExpression->getType(bindings)->placeInRegister(bindings, RegisterType::rightReg);
-    bindings->setOffset(bindings->currentOffset() + 4);
+    bindings->setOffset(bindings->currentOffset() + leftExpression->getType(bindings)->getSize());
     leftExpression->getType(bindings)->placeInRegister(bindings, RegisterType::leftReg);
     std::cout << "sllv  " << type->getRegister(RegisterType::evaluateReg) <<
     ", " << type->getRegister(RegisterType::leftReg) << ", " <<  type->getRegister(RegisterType::rightReg)
@@ -431,10 +492,10 @@ void ShiftLeftOperator::printASM(Bindings *bindings){
 void ShiftRightOperator::printASM(Bindings *bindings){
     Type *type = leftExpression->getType(bindings);
     leftExpression->printASM(bindings);
-    bindings->setOffset(bindings->currentOffset() - 4);
+    bindings->setOffset(bindings->currentOffset() - leftExpression->getType(bindings)->getSize());
     rightExpression->printASM(bindings);
     rightExpression->getType(bindings)->placeInRegister(bindings, RegisterType::rightReg);
-    bindings->setOffset(bindings->currentOffset() + 4);
+    bindings->setOffset(bindings->currentOffset() + leftExpression->getType(bindings)->getSize());
     leftExpression->getType(bindings)->placeInRegister(bindings, RegisterType::leftReg);
     if(type->isSigned() == false){
         std::cout << "srav  " << type->getRegister(RegisterType::evaluateReg) <<
@@ -487,11 +548,16 @@ void DefreferenceOperator::printASM(Bindings *bindings){
 }
 
 void DefreferenceOperator::printASMAssign(Bindings *bindings){
-    //place the varaible to store on the right hand register
-    ((Pointer*)expression)->getType()->placeInRegister(bindings, RegisterType::rightReg);
+    //place the variable to store on the right hand register
+    //std::cout << "dereference --------" << std::endl;
+    ((Pointer*)((Variable*)expression)->getType(bindings))->getType()->placeInRegister(bindings, RegisterType::rightReg);
+    //std::cout << "one --------" << std::endl;
     expression->printASM(bindings);
+    //std::cout << "two --------" << std::endl;
     expression->getType(bindings)->placeInRegister(bindings,RegisterType::evaluateReg);
-    ((Pointer*)expression)->getType()->extractFromregister(bindings,RegisterType::rightReg,RegisterType::evaluateReg);
+    //std::cout << "three --------" << std::endl;
+    ((Pointer*)((Variable*)expression)->getType(bindings))->getType()->extractFromregister(bindings,RegisterType::rightReg,RegisterType::evaluateReg);
+    //std::cout << "end dereference --------" << std::endl;
 }
 
 Type*  DefreferenceOperator::getType(Bindings *bindings){
@@ -500,10 +566,12 @@ Type*  DefreferenceOperator::getType(Bindings *bindings){
 
 void AddressOperator::printASM(Bindings *bindings){
     //first get hold of the offset of the current variable and then add it to the frame pointer
+    //std::cout << "address --------" << std::endl;
     int offset = bindings->stackPosition(((Variable*)expression)->getName());
     std::cout << "addiu   $v0,$fp," << offset <<std::endl;
     //then store the address on the stack 
     std::cout << "sw    $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
+    //std::cout << "end address --------" << std::endl;
 }
 
 Type*  AddressOperator::getType(Bindings *bindings){
@@ -528,17 +596,27 @@ Type* BinaryOperatorExpression::getType(Bindings *bindings){
 }
 
 void IndexOperator::printASM(Bindings *bindings){
+    std::cout << "start index " << std::endl;
+    //add one to the address
     AdditionOperator *add = new AdditionOperator(leftExpression,rightExpression);
     AssignmentOperator *assign1 = new AssignmentOperator(leftExpression,add);
     assign1->printASM(bindings);
+    //load the address onto memory
+    leftExpression->printASM(bindings);
+    //dereference the address
     ((Pointer*)((Variable*)leftExpression->getType(bindings)))->defreference(bindings);
+    int size = ((Pointer*)((Variable*)leftExpression->getType(bindings)))->getType()->getSize();
+    bindings->setOffset(bindings->currentOffset() - size);
+    //reset the address
     SubtractionOperator *sub = new SubtractionOperator(leftExpression,rightExpression);
     AssignmentOperator *assign2 = new AssignmentOperator(leftExpression,sub);
     assign2->printASM(bindings);
+    bindings->setOffset(bindings->currentOffset() + size);
     delete assign1;
     delete assign2;
     delete add;
     delete sub;
+    std::cout << "end index " << std::endl;
 }
 
 void IndexOperator::printASMAssign(Bindings *bindings){
@@ -549,8 +627,10 @@ void IndexOperator::printASMAssign(Bindings *bindings){
     assign1->printASM(bindings);
     leftExpression->getType(bindings)->placeInRegister(bindings,RegisterType::evaluateReg);
     bindings->setOffset(bindings->currentOffset() + 4);
-    ((Pointer*)leftExpression)->getType()->placeInRegister(bindings, RegisterType::rightReg);
-    ((Pointer*)leftExpression)->getType()->extractFromregister(bindings,RegisterType::rightReg,RegisterType::evaluateReg);
+    ((Pointer*)((Variable*)leftExpression)->getType(bindings))
+        ->getType()->placeInRegister(bindings, RegisterType::rightReg);
+    ((Pointer*)((Variable*)leftExpression)->getType(bindings))
+        ->getType()->extractFromregister(bindings,RegisterType::rightReg,RegisterType::evaluateReg);
     SubtractionOperator *sub = new SubtractionOperator(leftExpression,rightExpression);
     AssignmentOperator *assign2 = new AssignmentOperator(leftExpression,sub);
     assign2->printASM(bindings);
@@ -587,6 +667,7 @@ void TernaryOperator::printASM(Bindings *bindings){
         << ", " << failLabel <<std::endl;
     expressionTwo->printASM(bindings);
     std::cout << "j " << endLabel;
+    std::cout << "nop " <<std::endl;
     std::cout << ".global " << failLabel << std::endl;
     std::cout << failLabel << ":" << std::endl;
     expressionThree->printASM(bindings);

@@ -9,13 +9,26 @@
 Top::Top(){}
 
 void Top::printASM(){
+    std::map<std::string, Type*> functionsMapOriginal;
     for(Function * function: functions){
-        Bindings *bindings = new Bindings();
-        function->printASM(bindings);
-        delete bindings;
+        function->addToMap(functionsMapOriginal);
+    }
+    std::map<std::string, Type*> *functionsMap = &functionsMapOriginal;
+    Bindings *bindings = new Bindings(functionsMap);
+    for(VariableDefinition *definition: globalVariables){
+        definition->printASM(bindings);
+    }
+    for(Function * function: functions){
+        Bindings *newBindings = bindings->createGlobalBindings();
+        function->printASM(newBindings);
+        delete newBindings;
     }
 }
 
 void Top::addFunction(Function *function){
     functions.push_back(function);
+}
+
+void Top::addGlobal(VariableDefinition *definition){
+    globalVariables.push_back(definition);
 }

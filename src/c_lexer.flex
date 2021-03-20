@@ -14,6 +14,7 @@ ASSIGNMENT_OPERATOR (([<>][<>]|[*\/%+\-&^|])[=])
 INTEGERSUFFIX ([uU][lL]|[lL][uU]|[uUlL])
                                     /* defines the suffixes which indicates the type of a literal , u or U = unsigned , l or L = long . etc : https://en.cppreference.com/w/cpp/language/integer_literal */
 DECIMALCONSTANT ([1-9][0-9]*)
+FLOATCONSTANT ([1-9]*[0-9].[0-9]*)
 OCTALCONSTANT     ([0][0-7]*)
 HEXCONSTANT     ([0][xX][0-9A-Fa-f]+)
                                     /* Numerical constants simples.  */
@@ -50,7 +51,7 @@ ALL .
 (continue)	{ return T_continue; }
 (break)		{ return T_break; }
 (goto)		{ return T_goto; }
-(default)	{ return T_default; }
+(default)	{  std::cout << ""; return T_default;}
 (switch)	   { return T_switch; }
 (case)		{ return T_case; }
 
@@ -77,7 +78,7 @@ ALL .
 [=]		{ yylval.string = new std::string(yytext); return T_equal; }
 {ASSIGNMENT_OPERATOR} { yylval.string = new std::string(yytext); std::cout << ""; return T_assignment_op; }
 [?]		{ return T_qm; }
-[:]		{ return T_colon; }
+[:]		{ std::cout << ""; return T_colon; }
 [\|][\|]		{ return T_logical_or; }
 [&][&]		{ return T_logical_and; }
 [\|]		{ return T_or; }
@@ -117,6 +118,8 @@ sizeof		{ return T_sizeof; }
 {IDENTIFIER}	                        { yylval.string = new std::string(yytext); std::cout << ""; return T_identifier;}
 
 (({HEXCONSTANT}|{OCTALCONSTANT})|({DECIMALCONSTANT})){INTEGERSUFFIX}?     { yylval.number = strtol(yytext, NULL, 0); return T_int_const; }
+({FLOATCONSTANT}f)                                                        { yylval.string = new std::string(yytext); return T_float_const;}
+({FLOATCONSTANT}d)                                                        { yylval.string = new std::string(yytext); return T_double_constant;}
 
 {WHITESPACE}		{ ; }
 

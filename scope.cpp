@@ -7,7 +7,37 @@ int main(){
     char prevChar = 'a';
     while(std::getline(std::cin, input)){
         //std::cout << input <<std::endl;
-        for(char &c : input){
+        for(int i = 0; i < input.size(); i ++){//
+        char c = input[i];//
+        if(i < input.size() - 6){
+            if(input.substr(i,6) == " case "){
+                if(prevChar != '{'){
+                    std::cout << "}";
+                }
+            }
+        }
+        if(i < input.size() - 9){
+            if(input.substr(i,9) == " default "){
+                if(prevChar != '{'){
+                    std::cout << "}";
+                }
+            }
+        }
+        if(i < input.size() - 9){
+            if(input.substr(i,9) == " default\t"){
+                if(prevChar != '{'){
+                    std::cout << "}";
+                }
+            }
+        }
+        if(i < input.size() - 9){
+            if(input.substr(i,9) == " default:"){
+                if(prevChar != '{'){
+                    std::cout << "}";
+                }
+            }
+        }
+        ////for(char &c : input){
             if(c == '{'){
                 if((prevChar == '}')|(prevChar == ';')){
                     std::cout << "scope ";

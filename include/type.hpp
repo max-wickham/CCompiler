@@ -41,6 +41,8 @@ public:
 
 	virtual void loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings) = 0;
 
+	virtual void saveParameter(ReturnRegisters &returnRegisters, Bindings *bindings) = 0;
+
 	virtual void evaluateReturn(Bindings *bindings) = 0;
 
 	virtual void processReturn(Bindings *bindings) = 0;
@@ -76,6 +78,8 @@ class Void : public Type {
 
 	void loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings) override{}
 
+	void saveParameter(ReturnRegisters &returnRegisters, Bindings *bindings) override{}
+
 	void evaluateReturn(Bindings *bindings) override{}
 
 	void processReturn(Bindings *bindings) override{}
@@ -85,6 +89,8 @@ class Void : public Type {
 
 	//places the value in the register at the top of the stack
 	void extractFromRegister(Bindings *bindings, RegisterType type) override{}
+
+	void extractFromregister(Bindings *bindings, RegisterType type, RegisterType address) override{}
 
 	//gets the register string from a register type
 	std::string getRegister(RegisterType type) override;
@@ -155,6 +161,8 @@ public:
 	std::string getName() override;
 
 	void loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings) override;
+//TODO
+	void saveParameter(ReturnRegisters &returnRegisters, Bindings *bindings) override;
 
 	void evaluateReturn(Bindings *bindings) override;
 
@@ -186,6 +194,8 @@ public:
 	std::string getName() override;
 
 	void loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings) override;
+//TODO
+	void saveParameter(ReturnRegisters &returnRegisters, Bindings *bindings) override;
 
 	void evaluateReturn(Bindings *bindings) override;
 
@@ -211,8 +221,8 @@ protected:
 	Type *type;
 	std::string id;
 public:
+	Pointer(){}
 	Pointer(Type *type);
-
 	void defreference(Bindings *bindings);
 	void storeDereference(Bindings *bindings);
 	virtual void initialise(Bindings *bindings);
@@ -221,9 +231,9 @@ public:
 
 class Array : public Pointer {
 protected:
-	int size;
+	int arraySize;
 public:
-	Array(Type *type, int size);
+	Array(Type *type, int arraySize);
 	void initialise(Bindings *bindings);
 };
 
@@ -238,6 +248,8 @@ public:
 	std::string getName() override;
 
 	void loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings) override;
+
+	void saveParameter(ReturnRegisters &returnRegisters, Bindings *bindings) override;
 
 	void evaluateReturn(Bindings *bindings) override;
 
@@ -274,4 +286,53 @@ public:
 	Expression* getZero();
 };
 
- #endif
+class Double : public OperandType {
+protected:
+	const int size = 8;
+public:
+	Double();
+
+	int getSize() override;
+
+	std::string getName() override;
+
+	void loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings) override;
+
+	void saveParameter(ReturnRegisters &returnRegisters, Bindings *bindings) override;
+
+	void evaluateReturn(Bindings *bindings) override;
+
+	void processReturn(Bindings *bindings) override;
+
+	void placeInRegister(Bindings *bindings, RegisterType type) override;
+
+	void extractFromRegister(Bindings *bindings, RegisterType type) override;
+
+	void extractFromregister(Bindings *bindings, RegisterType type, RegisterType address) override;
+
+	std::string getRegister(RegisterType type) override;
+
+	void saveVariable(Bindings *bindings, std::string id) override;
+
+	void placeVariableOnStack(Bindings *bindings, std::string id) override;
+
+	void placeVariableOnStack(Bindings *bindings) override;
+
+	std::string getAdditionOperator() override;
+
+	std::string getSubtractionOperator() override;
+
+	std::string getMultiplicationOperator() override;
+
+	std::string getDivisionOperator() override;
+
+	void extractFromMultRegister(Bindings *bindings) override;
+
+	void extractFromDivRegister(Bindings *bindings) override;
+	//TODO
+	void beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::string label);
+
+	Expression* getZero();
+};
+
+#endif

@@ -60,6 +60,15 @@ class FloatConstant: public Expression{
     Type*  getType(Bindings *bindings) override;
 };
 
+class DoubleConstant: public Expression{
+    protected:
+    double value;
+    public:
+    DoubleConstant(double value);
+    void printASM(Bindings *bindings) override;
+    Type*  getType(Bindings *bindings) override;
+};
+
 class UnsignedConstant: public Expression{
     protected:
     unsigned int value;

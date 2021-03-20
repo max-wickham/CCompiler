@@ -10,6 +10,30 @@ ScopedStatement::ScopedStatement(Statement *statement, Statement *nextStatement)
     this->nextStatement = nextStatement;
 }   
 
+BreakStatement::BreakStatement(Statement *nextStatement){
+    this->nextStatement = nextStatement;
+}
+
+void BreakStatement::printASM(Bindings *bindings){
+    std::cout << "j " << bindings->getBreak() << std::endl;
+    std::cout <<"nop" <<std::endl;
+    if(nextStatement != nullptr){
+        nextStatement->printASM(bindings);
+    }
+}
+
+ContinueStatement::ContinueStatement(Statement *nextStatement){
+    this->nextStatement = nextStatement;
+}
+
+void ContinueStatement::printASM(Bindings *bindings){
+    std::cout << "j " << bindings->getContinue() << std::endl;
+    std::cout <<"nop" <<std::endl;
+    if(nextStatement != nullptr){
+        nextStatement->printASM(bindings);
+    }
+}
+
 void ScopedStatement::printASM(Bindings* bindings){
     bindings->addScope();
     this->statement->printASM(bindings);
@@ -45,6 +69,7 @@ void ReturnStatement::printASM(Bindings* bindings){
     std::cout << "lw      $fp,-4($fp)" << std::endl;
     //the load register needs to be jumped to
     std::cout << "jr     $ra" << std::endl;
+    std::cout << "nop   " <<std::endl;
 }
 
 WhileLoopStatement::WhileLoopStatement(Expression *condition, Statement *statement, Statement *nextStatement){
@@ -58,7 +83,8 @@ void WhileLoopStatement::printASM(Bindings* bindings){
     std::string beginLabel = bindings->createLabel("begin");
     bindings->setBreak(endLabel);
     bindings->setContinue(beginLabel);
-    std::cout << beginLabel << ":";
+    std::cout << ".global " << beginLabel << std::endl;
+    std::cout << beginLabel << ":" << std::endl;
     //check that the condition is true
     condition->printASM(bindings);
     condition->getType(bindings)->placeInRegister(bindings,RegisterType::evaluateReg);
@@ -73,7 +99,11 @@ void WhileLoopStatement::printASM(Bindings* bindings){
     bindings->deleteScope();
     //jump back to the begining
     std::cout << "j " << beginLabel << std::endl;
-    std::cout << endLabel << ":";
+    std::cout << "nop " <<std::endl;
+    std::cout << ".global " << endLabel << std::endl;
+    std::cout << endLabel << ":" << std::endl;
+    bindings->removeContinue();
+    bindings->removeBreak();
     if(nextStatement != nullptr){
         nextStatement->printASM(bindings);
     }
@@ -108,8 +138,9 @@ ForLoopStatement::ForLoopStatement(Expression *condition, Expression *incremente
 void ForLoopStatement::printASM(Bindings* bindings){
     std::string endLabel = bindings->createLabel("end");
     std::string beginLabel = bindings->createLabel("begin");
+    std::string continueLabel = bindings->createLabel("continue");
     bindings->setBreak(endLabel);
-    bindings->setContinue(beginLabel);
+    bindings->setContinue(continueLabel);
     bindings->addScope();
     //firstly create the definded varaible
     if(definitionDec != nullptr){
@@ -121,7 +152,8 @@ void ForLoopStatement::printASM(Bindings* bindings){
         definitionExp->printASM(bindings);
     }
     //definition->printASM(bindings);
-    std::cout << beginLabel << ":";
+    std::cout << ".global " << beginLabel << std::endl;
+    std::cout << beginLabel << ":" << std::endl;
     //check that the condition is true
     condition->printASM(bindings);
     condition->getType(bindings)->placeInRegister(bindings,RegisterType::evaluateReg);
@@ -135,11 +167,16 @@ void ForLoopStatement::printASM(Bindings* bindings){
     }
     bindings->deleteScope();
     //run the incrementer
+    std::cout << ".global " << continueLabel << std::endl;
+    std::cout << continueLabel << ":" << std::endl;
     incrementer->printASM(bindings);
     //jump back to the begining
     std::cout << "j " << beginLabel << std::endl;
+    std::cout << "nop " <<std::endl;
     std::cout << endLabel << ":";
     bindings->deleteScope();
+    bindings->removeContinue();
+    bindings->removeBreak();
     if(nextStatement != nullptr){
         this->nextStatement->printASM(bindings);
     }
@@ -154,23 +191,28 @@ IfElseStatement::IfElseStatement(Expression *condition, Statement *ifStatement, 
 
 void IfElseStatement::printASM(Bindings* bindings){
     condition->printASM(bindings);
-    condition->getType(bindings)->placeInRegister(bindings,RegisterType::evaluateReg);
+    std::cout << "lw    $v0, " << bindings->currentOffset() << "($fp)" <<std::endl;
+    //condition->getType(bindings)->placeInRegister(bindings,RegisterType::evaluateReg);
     std::string endElseLabel = bindings->createLabel("endelse");
     std::string elseLabel = bindings->createLabel("else");
     //std::cout << "lw $t0, " + std::to_string(bindings->currentOffset()) + "($zero)" << std::endl;
-    std::cout << "beq " << condition->getType(bindings)->getRegister(RegisterType::evaluateReg)
+    //std::cout << "beq " << condition->getType(bindings)->getRegister(RegisterType::evaluateReg)
+    std::cout << "beq " << "$v0"
         << ", $zero, " << elseLabel << std::endl;
     bindings->addScope();
     ifStatement->printASM(bindings);
     bindings->deleteScope();
     std::cout << "j " << endElseLabel << std::endl;
-    std::cout << elseLabel << ":";
+    std::cout << "nop " <<std::endl;
+    std::cout << ".global " << elseLabel  << std::endl;
+    std::cout << elseLabel << ":" << std::endl;
     bindings->addScope();
     if(elseStatement != nullptr){
         elseStatement->printASM(bindings);
     }
     bindings->deleteScope();
-    std::cout << endElseLabel << ":";
+    std::cout << ".global " << endElseLabel << std::endl;
+    std::cout << endElseLabel << ":" << std::endl;
     if(nextStatement != nullptr){
         this->nextStatement->printASM(bindings);
     }
@@ -202,9 +244,10 @@ void VariableDefinition::printASM(Bindings *bindings){
         delete variable;
         delete assignment;
     }
-    if(dynamic_cast<Pointer*>(decleration->type) != nullptr){
+    else if(dynamic_cast<Pointer*>(decleration->type) != nullptr){
         ((Pointer*)decleration->type)->initialise(bindings);
     }
+    //std::cout << "end decleration " << std::endl;
     if(nextStatement != nullptr){
         this->nextStatement->printASM(bindings);
     }
@@ -231,18 +274,20 @@ SwitchStatement::SwitchStatement(Expression *expression, Statement *caseStatemen
 
 void SwitchStatement::printASM(Bindings* bindings){
     std::string caseLabel = bindings->createLabel("case");
+    bindings->setBreak(caseLabel);
     expression->printASM(bindings);
     caseStatement->printASM(bindings);
-    if(this->nextStatement != nullptr){
+    std::cout << ".global " << caseLabel <<std::endl;
+    std::cout << caseLabel << ":" << std::endl;
+    if(nextStatement != nullptr){
         nextStatement->printASM(bindings);
     }
-    bindings->setCase(caseLabel);
 }
 
-CaseStatement::CaseStatement(Expression *constant, Statement *statement, CaseStatement *nextCaseStatement){
+CaseStatement::CaseStatement(Expression *constant, Statement *statement, Statement *nextCaseStatement){
     this->constant = constant;
     this->statement = statement;
-    this->nextStatement = nextStatement;
+    this->nextStatement = nextCaseStatement;
 }
 
 void CaseStatement::printASM(Bindings* bindings){
@@ -250,25 +295,34 @@ void CaseStatement::printASM(Bindings* bindings){
         std::string endLabel = bindings->createLabel("endcase");
         std::string passLabel = bindings->createLabel("passcase");
         //place expression that is in stack in register
-        constant->getType(bindings)->placeInRegister(bindings,RegisterType::leftReg);
+        int offset = bindings->currentOffset();
+        bindings->setOffset(bindings->currentOffset() - constant->getType(bindings)->getSize());
         constant->printASM(bindings);
         constant->getType(bindings)->placeInRegister(bindings,RegisterType::rightReg);
-        constant->getType(bindings)->extractFromRegister(bindings,RegisterType::leftReg);
+        bindings->setOffset(offset);
+        constant->getType(bindings)->placeInRegister(bindings,RegisterType::leftReg);
+        bindings->setOffset(bindings->currentOffset() - constant->getType(bindings)->getSize());
+        //constant->getType(bindings)->extractFromRegister(bindings,RegisterType::leftReg);
         constant->getType(bindings)->beq(bindings,RegisterType::leftReg,RegisterType::rightReg,passLabel);
         std::cout << "nop" << std::endl;
         std::cout << "j " << endLabel <<std::endl;
         std::cout << "nop" << std::endl;
-        std::cout << "global. " << passLabel <<std::endl;
+        std::cout << ".global " << passLabel <<std::endl;
         std::cout << passLabel << ":" <<std::endl;
         statement->printASM(bindings);
-        std::cout << "j " << bindings->getCase() <<std::endl;
+        std::cout << "j " << bindings->getBreak() <<std::endl;
         std::cout << "nop" << std::endl;
-        std::cout << "global. " << endLabel <<std::endl;
+        std::cout << ".global " << endLabel <<std::endl;
         std::cout << endLabel << ":" <<std::endl;
+        //return bindings to expressoin
+        bindings->setOffset(offset);
     }else{
        statement->printASM(bindings); 
     }
     if(nextStatement != nullptr){
+        if(dynamic_cast<CaseStatement*>(nextStatement) == nullptr){
+            bindings->removeBreak();
+        }
         nextStatement->printASM(bindings);
     }
 }

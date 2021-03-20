@@ -22,12 +22,13 @@ class ParameterDefinition: public Node{
 
 class Parameter: public Node{
     protected:
+    int offset;
     Expression *expression;
     Parameter *parameterNext;
     public:
     Parameter(Expression *expression, Parameter *parameterNext);
     void calculateTotalMem(int &total, Bindings *bindings);
-    void placeOnStack(Bindings *bindings, int &totalMem);
+    void placeOnStack(Bindings *bindings, int &totalMem, ReturnRegisters &returnRegisters);
     void createLabel(std::string &label, Bindings *bindings);
 };
 

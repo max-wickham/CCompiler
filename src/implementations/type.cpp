@@ -73,6 +73,7 @@ Expression* IntegralType::getZero(){
     NumberConstant *zero = new NumberConstant(0);
     return zero;
 }
+
 //int
 Int::Int(){}
 
@@ -104,11 +105,11 @@ int Int::getSize(){
 }
 
 void Int::loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings){
-    if(returnRegisters.a0 == false){
+    if(returnRegisters.a0 == false && returnRegisters.f12 == false){
         std::cout << "sw      $a0," <<  bindings->currentOffset() << "($sp)" << std::endl;
         returnRegisters.a0 = true;
     }
-    else if(returnRegisters.a1 == false){
+    else if(returnRegisters.a1 == false && returnRegisters.f14 == false){
         std::cout << "sw      $a1," <<  bindings->currentOffset() << "($sp)" << std::endl;
         returnRegisters.a1 = true;
     }
@@ -127,6 +128,25 @@ void Int::loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings){
         std::cout << "sw      $v1," <<  bindings->currentOffset() << "($sp)" << std::endl;
     }
     returnRegisters.currentMemOffset += this->size;
+}
+//TODO
+void Int::saveParameter(ReturnRegisters &returnRegisters, Bindings *bindings){
+    if(returnRegisters.a0 == false && returnRegisters.f12 == false){
+        std::cout << "lw      $a0," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.a0 = true;
+    }
+    else if(returnRegisters.a1 == false && returnRegisters.f14 == false){
+        std::cout << "lw      $a1," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.a1 = true;
+    }
+    else if(returnRegisters.a2 == false){
+        std::cout << "lw      $a2," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.a2 = true;
+    }
+    else if(returnRegisters.a3 == false){
+        std::cout << "lw      $a3," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.a3 = true;
+    }
 }
 
 void Int::evaluateReturn(Bindings *bindings){
@@ -170,14 +190,14 @@ void Int::placeVariableOnStack(Bindings *bindings, std::string id){
 
 void Int::placeVariableOnStack(Bindings *bindings){
     //load the address from the stack
-    std::cout << "sw    " << this->getRegister(RegisterType::evaluateReg)
+    std::cout << "lw    " << "$t9"
         << "," << bindings->currentOffset() << "($fp)" << std::endl;
     //put the value at the address into evaluate register
     std::cout << "lw    " << this->getRegister(RegisterType::evaluateReg)
-        << "," << 0 << "("  << this->getRegister(RegisterType::evaluateReg) << ")" << std::endl;
+        << "," << 0 << "("  << "$t9" << ")" << std::endl;
     //put the value in the evaluate register onto the stack
-    std::cout << "sw    " << this->getRegister(RegisterType::evaluateReg)
-        << "," << bindings->currentOffset() << "($fp)" << std::endl;
+    //std::cout << "sw    " << this->getRegister(RegisterType::evaluateReg)
+    //    << "," << bindings->currentOffset() << "($fp)" << std::endl;
     this->extractFromRegister(bindings,RegisterType::evaluateReg);
 }
 
@@ -213,10 +233,10 @@ void Pointer::initialise(Bindings *bindings){
     int size = type->getSize();
     bindings->setOffset(bindings->currentOffset() + size);
 }
-//array
-Array::Array(Type *type, int size){
+
+Array::Array(Type *type, int arraySize){
     this->type = type;
-    this->size = size;
+    this->arraySize = arraySize;
 }
 
 void Array::initialise(Bindings *bindings){
@@ -226,7 +246,7 @@ void Array::initialise(Bindings *bindings){
     constant->printASM(bindings);
     bindings->setOffset(bindings->currentOffset() + 4);
     delete constant;
-    int total = type->getSize()*size;
+    int total = type->getSize()*arraySize;
     bindings->setOffset(bindings->currentOffset() + total);
 }
 
@@ -243,82 +263,92 @@ std::string Char::getName() {
 //-> check this is correct
 void Char::loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings) {
     if(returnRegisters.a0 == false){
-        std::cout << "sw      $a0," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        std::cout << "sb      $a0," <<  bindings->currentOffset() << "($sp)" << std::endl;
         returnRegisters.a0 = true;
     }
     else if(returnRegisters.a1 == false){
-        std::cout << "sw      $a1," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        std::cout << "sb      $a1," <<  bindings->currentOffset() << "($sp)" << std::endl;
         returnRegisters.a1 = true;
     }
     else if(returnRegisters.a2 == false){
-        std::cout << "sw      $a2," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        std::cout << "sb      $a2," <<  bindings->currentOffset() << "($sp)" << std::endl;
         returnRegisters.a2 = true;
     }
     else if(returnRegisters.a3 == false){
-        std::cout << "sw      $a3," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        std::cout << "sb      $a3," <<  bindings->currentOffset() << "($sp)" << std::endl;
         returnRegisters.a3 = true;
     }
     else{
         //load the value from memory 
         //store it in the new frame
-        std::cout << "lw      $v1," <<  returnRegisters.currentMemOffset << "($sp)" << std::endl;
-        std::cout << "sw      $v1," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        std::cout << "lb      $v1," <<  returnRegisters.currentMemOffset << "($sp)" << std::endl;
+        std::cout << "sb      $v1," <<  bindings->currentOffset() << "($sp)" << std::endl;
     }
     returnRegisters.currentMemOffset += this->size;
 }
+//TODO
+void Char::saveParameter(ReturnRegisters &returnRegisters, Bindings *bindings){}
 //-> check this is correct
 void Char::evaluateReturn(Bindings *bindings) {
-    std::cout << "lw      " << this->getRegister(RegisterType::returnReg) 
+    std::cout << "lb      " << this->getRegister(RegisterType::returnReg) 
         << "," <<  bindings->currentOffset() << "($fp)" << std::endl;
 }
 //-> check this is correct
 void Char::processReturn(Bindings *bindings) {
-    std::cout << "sw      " << this->getRegister(RegisterType::returnReg) 
+    std::cout << "sb      " << this->getRegister(RegisterType::returnReg) 
         << "," <<  bindings->currentOffset() << "($fp)" << std::endl;
 }
 //-> check this is correct
 void Char::placeInRegister(Bindings *bindings, RegisterType type) {
-    std::cout << "lw    " << this->getRegister(type) 
+    std::cout << "lb    " << this->getRegister(type) 
         << "," << bindings->currentOffset() << "($fp)" << std::endl;
 }
 //-> check this is correct --> different from int
 void Char::extractFromRegister(Bindings *bindings, RegisterType type) {
-    std::cout << "andi " << this->getRegister(type)
-        << "," << this->getRegister(type) << ",255" << std::endl;
-    std::cout << "sw    " << this->getRegister(type) 
+    //std::cout << "andi " << this->getRegister(type)
+    //    << "," << this->getRegister(type) << ",255" << std::endl;
+    std::cout << "sb    " << this->getRegister(type) 
         << "," << bindings->currentOffset() << "($fp)" << std::endl;
 }
 //-> check this is correct --> different from int
 void Char::extractFromregister(Bindings *bindings, RegisterType type, RegisterType address){
-    std::cout << "andi " << this->getRegister(type)
-        << "," << this->getRegister(type) << ",255" << std::endl;
-    std::cout << "sw    " << this->getRegister(type) 
+    //std::cout << "andi " << this->getRegister(type)
+    //    << "," << this->getRegister(type) << ",255" << std::endl;
+    std::cout << "sb    " << this->getRegister(type) 
         << "," << "0" << "(" << this->getRegister(address) << ")" << std::endl;
 }
 //-> check this is correct
 void Char::saveVariable(Bindings *bindings, std::string id) {
-    std::cout << "lw    " << this->getRegister(RegisterType::evaluateReg) << ","
+    std::cout << "lb    " << this->getRegister(RegisterType::evaluateReg) << ","
         << bindings->currentOffset() << "($fp)" << std::endl;
-    std::cout << "sw    " << this->getRegister(RegisterType::evaluateReg) << ","
+    std::cout << "sb    " << this->getRegister(RegisterType::evaluateReg) << ","
         << bindings->stackPosition(id) << "($fp)" << std::endl;
 }
-//-> check this is correct
+//-> check this is 
 void Char::placeVariableOnStack(Bindings *bindings, std::string id) {
-    std::cout << "lw    " << this->getRegister(RegisterType::evaluateReg)
+    std::cout << "lb    " << this->getRegister(RegisterType::evaluateReg)
         << "," << bindings->stackPosition(id) << "($fp)" << std::endl;
     this->extractFromRegister(bindings,RegisterType::evaluateReg);
 }
 //-> check this is correct
 void Char::placeVariableOnStack(Bindings *bindings) {
+    // //load the address from the stack
+    // std::cout << "sb    " << this->getRegister(RegisterType::evaluateReg)
+    //     << "," << bindings->currentOffset() << "($fp)" << std::endl;
+    // //put the value at the address into evaluate register
+    // std::cout << "lb    " << this->getRegister(RegisterType::evaluateReg)
+    //     << "," << 0 << "("  << this->getRegister(RegisterType::evaluateReg) << ")" << std::endl;
+    // //put the value in the evaluate register onto the stack
+    // std::cout << "sb    " << this->getRegister(RegisterType::evaluateReg)
+    //     << "," << bindings->currentOffset() << "($fp)" << std::endl;
+    // this->extractFromRegister(bindings,RegisterType::evaluateReg);
+
     //load the address from the stack
-    std::cout << "sw    " << this->getRegister(RegisterType::evaluateReg)
+    std::cout << "lw    " << "$t9"
         << "," << bindings->currentOffset() << "($fp)" << std::endl;
     //put the value at the address into evaluate register
-    std::cout << "lw    " << this->getRegister(RegisterType::evaluateReg)
-        << "," << 0 << "("  << this->getRegister(RegisterType::evaluateReg) << ")" << std::endl;
-    //put the value in the evaluate register onto the stack
-    std::cout << "sw    " << this->getRegister(RegisterType::evaluateReg)
-        << "," << bindings->currentOffset() << "($fp)" << std::endl;
+    std::cout << "lb    " << this->getRegister(RegisterType::evaluateReg)
+        << "," << 0 << "("  << "$t9" << ")" << std::endl;
     this->extractFromRegister(bindings,RegisterType::evaluateReg);
 }
 //-> check this is correct
@@ -350,19 +380,19 @@ std::string Float::getName(){
 }
 //-> check this is correct
 void Float::loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings){
-    if(returnRegisters.f12 == false){
+    if(returnRegisters.f12 == false && returnRegisters.a0 == false){
         std::cout << "s.s      $f12," <<  bindings->currentOffset() << "($sp)" << std::endl;
         returnRegisters.f12 = true;
     }
-    else if(returnRegisters.f14 == false){
+    else if(returnRegisters.f14 == false && returnRegisters.a0 == false){
         std::cout << "s.s      $f14," <<  bindings->currentOffset() << "($sp)" << std::endl;
         returnRegisters.f14 = true;
     }
-    else if(returnRegisters.a2 == false){
+    else if(returnRegisters.a2 == false && returnRegisters.a0 == false){
         std::cout << "sw      $a2," <<  bindings->currentOffset() << "($sp)" << std::endl;
         returnRegisters.a2 = true;
     }
-    else if(returnRegisters.a3 == false){
+    else if(returnRegisters.a3 == false && returnRegisters.a0 == false){
         std::cout << "sw      $a3," <<  bindings->currentOffset() << "($sp)" << std::endl;
         returnRegisters.a3 = true;
     }
@@ -374,6 +404,8 @@ void Float::loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings){
     }
     returnRegisters.currentMemOffset += this->size;
 }
+//TODO
+void Float::saveParameter(ReturnRegisters &returnRegisters, Bindings *bindings){}
 //-> check this is correct
 void Float::evaluateReturn(Bindings *bindings){
     std::cout << "l.s      " << this->getRegister(RegisterType::returnReg) 
@@ -431,11 +463,11 @@ void Float::placeVariableOnStack(Bindings *bindings, std::string id){
 //-> check this is correct
 void Float::placeVariableOnStack(Bindings *bindings){
     //load the address from the stack
-    std::cout << "s.s    " << this->getRegister(RegisterType::evaluateReg)
+    std::cout << "s.s    " << "$t9"
         << "," << bindings->currentOffset() << "($fp)" << std::endl;
     //put the value at the address into evaluate register
     std::cout << "l.s    " << this->getRegister(RegisterType::evaluateReg)
-        << "," << 0 << "("  << this->getRegister(RegisterType::evaluateReg) << ")" << std::endl;
+        << "," << 0 << "("  << "$t9" << ")" << std::endl;
     //put the value in the evaluate register onto the stack
     std::cout << "s.s    " << this->getRegister(RegisterType::evaluateReg)
         << "," << bindings->currentOffset() << "($fp)" << std::endl;
@@ -490,5 +522,166 @@ void Float::beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::s
 
 Expression* Float::getZero(){
     FloatConstant *zero = new FloatConstant(0);
+    return zero;
+}
+
+//double
+Double::Double(){}
+
+int Double::getSize(){
+    return this->size;
+}
+
+std::string Double::getName(){
+    return "double";
+}
+//todo
+void Double::loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings){
+    if(returnRegisters.f12 == false && returnRegisters.a0 == false){
+        std::cout << "s.d      $f12," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.f12 = true;
+    }
+    else if(returnRegisters.f14 == false && returnRegisters.a0 == false){
+        std::cout << "s.d      $f14," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.f14 = true;
+    }
+    else if(returnRegisters.a2 == false && returnRegisters.a0 == false){
+        std::cout << "sw      $a2," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.a2 = true;
+    }
+    else if(returnRegisters.a3 == false && returnRegisters.a0 == false){
+        std::cout << "sw      $a3," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.a3 = true;
+    }
+    else{
+        std::cout << "l.d      " << this->getRegister(RegisterType::evaluateReg) 
+            << "," <<  returnRegisters.currentMemOffset << "($sp)" << std::endl;
+        std::cout <<"nop" <<std::endl;
+        std::cout << "s.d      " << this->getRegister(RegisterType::evaluateReg) 
+            << "," <<  bindings->currentOffset() << "($sp)" << std::endl;
+    }
+    returnRegisters.currentMemOffset += this->size;
+}
+//TODO
+void Double::saveParameter(ReturnRegisters &returnRegisters, Bindings *bindings){}
+//todo
+void Double::evaluateReturn(Bindings *bindings){
+    std::cout << "l.s      " << this->getRegister(RegisterType::returnReg) 
+        << "," <<  bindings->currentOffset() << "($fp)" << std::endl;
+    std::cout <<"nop" <<std::endl;
+}
+//todo
+void Double::processReturn(Bindings *bindings){
+    std::cout << "s.s      " << this->getRegister(RegisterType::returnReg) 
+        << "," <<  bindings->currentOffset() << "($fp)" << std::endl;
+}
+//----check
+void Double::placeInRegister(Bindings *bindings, RegisterType type){
+    std::cout << "l.d    " << this->getRegister(type) 
+        << "," << bindings->currentOffset() << "($fp)" << std::endl;
+    std::cout <<"nop" <<std::endl;
+}
+//----check
+void Double::extractFromRegister(Bindings *bindings, RegisterType type){
+    std::cout << "s.d    " << this->getRegister(type) 
+        << "," << bindings->currentOffset() << "($fp)" << std::endl;
+}
+//----check
+void Double::extractFromregister(Bindings *bindings, RegisterType type, RegisterType address){
+    std::cout << "s.d    " << this->getRegister(type) 
+        << "," << "0" << "(" << this->getRegister(address) << ")" << std::endl;
+}
+//----check
+std::string Double::getRegister(RegisterType type){
+    if(type == RegisterType::leftReg){
+        return "$f4";
+    }
+    if(type == RegisterType::rightReg){
+        return "$f6";
+    }
+    if(type == RegisterType::evaluateReg){
+        return "$f8";
+    }
+    if(type == RegisterType::returnReg){
+        return "$f0";
+    }
+    return "$f0";
+}
+//----check
+void Double::saveVariable(Bindings *bindings, std::string id){
+    std::cout << "l.d    " << this->getRegister(RegisterType::evaluateReg) << ","
+        << bindings->currentOffset() << "($fp)" << std::endl;
+    std::cout <<"nop" <<std::endl;
+    std::cout << "s.d    " << this->getRegister(RegisterType::evaluateReg) << ","
+        << bindings->stackPosition(id) << "($fp)" << std::endl;
+}
+//----check
+void Double::placeVariableOnStack(Bindings *bindings, std::string id){
+    std::cout << "l.d    " << this->getRegister(RegisterType::evaluateReg)
+        << "," << bindings->stackPosition(id) << "($fp)" << std::endl;
+    std::cout <<"nop" <<std::endl;
+    this->extractFromRegister(bindings,RegisterType::evaluateReg);
+}
+//----check
+void Double::placeVariableOnStack(Bindings *bindings){
+    //load the address from the stack
+    std::cout << "s.d    " << "$t9"
+        << "," << bindings->currentOffset() << "($fp)" << std::endl;
+    //put the value at the address into evaluate register
+    std::cout << "l.d    " << this->getRegister(RegisterType::evaluateReg)
+        << "," << 0 << "("  << "$t9" << ")" << std::endl;
+    std::cout <<"nop" <<std::endl;
+    //put the value in the evaluate register onto the stack
+    std::cout << "s.d    " << this->getRegister(RegisterType::evaluateReg)
+        << "," << bindings->currentOffset() << "($fp)" << std::endl;
+    this->extractFromRegister(bindings,RegisterType::evaluateReg);
+}
+//----check
+std::string Double::getAdditionOperator(){
+    return "add.d";
+}
+//----check
+std::string Double::getSubtractionOperator(){
+    return "sub.d";
+}
+//----check
+std::string Double::getMultiplicationOperator(){
+    return "mul.d " + this->getRegister(evaluateReg) + ",";
+}
+//----check
+std::string Double::getDivisionOperator(){
+
+    return "div.d " + this->getRegister(evaluateReg) + ",";
+}
+//----check
+void Double::extractFromMultRegister(Bindings *bindings){
+    this->extractFromRegister(bindings,RegisterType::evaluateReg);
+}
+//----check
+void Double::extractFromDivRegister(Bindings *bindings){
+    this->extractFromRegister(bindings,RegisterType::evaluateReg);
+}
+//----check
+void Double::beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::string label){
+    std::string reg1String;
+    std::string reg2String;
+    if(reg1 == RegisterType::zeroReg){
+        std::cout << "li.d $f0, 0" << std::endl;
+        reg1String = "$f0";
+    }else{
+        reg1String = this->getRegister(reg1);
+    }
+    if(reg2 == RegisterType::zeroReg){
+        std::cout << "li.d $f0, 0" << std::endl;
+        reg2String = "$f0";
+    }else{
+        reg2String = this->getRegister(reg1);
+    }
+    std::cout << "c.e.d " << reg1String << "," << reg2String << std::endl;
+    std::cout << "bc1t " << label << std::endl;
+}
+//----check
+Expression* Double::getZero(){
+    DoubleConstant *zero = new DoubleConstant(0);
     return zero;
 }

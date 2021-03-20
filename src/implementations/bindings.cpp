@@ -12,6 +12,23 @@ Bindings::Bindings(){
     bindings.push_front(map);
 }
 
+Bindings::Bindings(std::map<std::string, Type*> *functionsP){
+    this->functions = functionsP;
+}
+
+Bindings* Bindings::createGlobalBindings(){
+    //Type * type = functions->at("y");
+    Bindings *newBindings = new Bindings();
+    std::list<std::map<std::string, BindingData>>::iterator it;
+    newBindings->bindings.begin() = bindings.begin();
+    newBindings->current_offset = this->current_offset;
+    newBindings->functions = functions;
+    //std::cout << newBindings->functions << std::endl;
+    //std::cout << functions << std::endl;
+    //std::cout << "Get Function" << std::endl;
+    return newBindings;
+}
+
 void Bindings::addScope(){
     std::map<std::string,BindingData> map;
     bindings.push_front(map);
@@ -52,11 +69,12 @@ void Bindings::addVariable(Decleration *decleration){
 }
 
 void Bindings::addFunction(std::string id, Type *type){
-    functions.insert(std::pair<std::string,Type*>(id,type));
+    //std::cout << "Add Function" << id << std::endl;
+    functions->insert(std::pair<std::string,Type*>(id,type));
 }
 
 Type* Bindings::getFunction(std::string id){
-    return functions.at(id);
+    return functions->at(id);
 }
 
 Type* Bindings::getVariable(std::string id){
@@ -70,25 +88,42 @@ Type* Bindings::getVariable(std::string id){
 }
 
 void Bindings::setBreak(std::string label){
-    break_label = label;
+    break_label.push_front(label);
 }
 
 void Bindings::setContinue(std::string label){
-    continue_label = label;
+    continue_label.push_front(label);
 }
 
 void Bindings::setCase(std::string label){
-    case_label = label;
+    case_label.push_front(label);
 }
 
 std::string Bindings::getBreak(){
-    return break_label;
+    std::string label = *break_label.begin();
+    return label;
 }
+
 std::string Bindings::getContinue(){
-    return continue_label;
+    std::string label = *continue_label.begin();
+    return label;
 }
+
 std::string Bindings::getCase(){
-    return case_label;
+    std::string label = *case_label.begin();
+    return label;
+}
+
+void Bindings::removeBreak(){
+    break_label.pop_front();
+}
+
+void Bindings::removeContinue(){
+    continue_label.pop_front();
+}
+
+void Bindings::removeCase(){
+    case_label.pop_front();
 }
 
 std::string Bindings::createLabel(std::string id){

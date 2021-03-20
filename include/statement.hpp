@@ -12,6 +12,22 @@ class Statement: public Node{
     virtual void printASM(Bindings* bindings) = 0;
 };
 
+class BreakStatement: public Statement {
+    protected:
+    Statement *nextStatement;
+    public:
+    BreakStatement(Statement *nextStatement);
+    void printASM(Bindings *bindings);
+};
+
+class ContinueStatement: public Statement {
+    protected:
+    Statement *nextStatement;
+    public:
+    ContinueStatement(Statement *nextStatement);
+    void printASM(Bindings *bindings);
+};
+
 class ScopedStatement: public Statement{
     protected:
     Statement *nextStatement;
@@ -100,7 +116,7 @@ class CaseStatement: public Statement{
     Statement *statement;
     Expression *constant;
     public:
-    CaseStatement(Expression *constant, Statement *statement, CaseStatement *nextCaseStatement);
+    CaseStatement(Expression *constant, Statement *statement, Statement *nextCaseStatement);
     virtual void printASM(Bindings* bindings) override;
 };
 

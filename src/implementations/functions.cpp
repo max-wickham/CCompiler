@@ -15,13 +15,17 @@ Function::Function(Decleration *decleration, Statement* statement,
             this->firstParameter = firstParameter;
 }
 
+
+void Function::addToMap(std::map<std::string, Type*> &functionMap){
+    functionMap[id] = type;
+}
+
 void Function::printASM(Bindings *bindings){
     std::string params = "";
     //if(firstParameter != nullptr){
         //create the label string needed to find where to jump to
     //    firstParameter->createLabel(params, bindings);
     //}
-    bindings->addFunction(id, type);
     //print the current label
     std::cout << ".global " << id << std::endl;
     std::cout << id << ":" <<std::endl;
@@ -39,7 +43,7 @@ void Function::printASM(Bindings *bindings){
     // std::cout << "sw      $s6,-36($sp)" << std::endl;
     // std::cout << "sw      $s7,-40($sp)" << std::endl;
     //set the current offset to + 44
-    bindings->setOffset(-12);
+    bindings->setOffset(-16);
     //load the parameters into memory 
     ReturnRegisters returnRegisters;
     if(firstParameter != nullptr){
