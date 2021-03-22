@@ -4,6 +4,7 @@
 #include "node.hpp"
 #include "bindings.hpp"
 #include <string>
+#include <vector>
 // #include <map>
 
 struct ReturnRegisters{
@@ -66,6 +67,50 @@ public:
 	virtual void placeVariableOnStack(Bindings *bindings) = 0;
 
 	virtual void beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::string label) = 0;
+};
+
+class Struct : public Type {
+	protected:
+	int size;
+	std::string id;
+	public:
+	Struct(int size, std::string *id);
+	
+	int getSize();
+
+	std::string getName();
+
+	void loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings);
+
+	void saveParameter(ReturnRegisters &returnRegisters, Bindings *bindings);
+
+	void evaluateReturn(Bindings *bindings);
+
+	void processReturn(Bindings *bindings);
+
+	//places the value at the top of the stack into the register
+	void placeInRegister(Bindings *bindings, RegisterType type);
+
+	//places the value in the register at the top of the stack
+	void extractFromRegister(Bindings *bindings, RegisterType type);
+
+	//extract from register and place in the mem address in the address register
+	void extractFromregister(Bindings *bindings, RegisterType type, RegisterType address);
+
+	//gets the register string from a register type
+	std::string getRegister(RegisterType type);
+
+	void saveVariable(Bindings *bindings, std::string id);
+	//TODO
+	void placeVariableOnStack(Bindings *bindings, std::string id);
+	//TODO
+	void placeElementOnStack(Bindings *bindings, std::string id, std::string elementId);
+	//TODO
+	Type *getElementType(Bindings *bindings, std::string id, std::string elementId);
+	//TODO
+	void placeVariableOnStack(Bindings *bindings);
+
+	void beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::string label);
 };
 
 class Void : public Type {

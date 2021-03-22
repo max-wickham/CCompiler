@@ -7,6 +7,8 @@
 #include "parameter.hpp"
 #include "bindings.hpp"
 #include <string>
+#include <vector>
+#include "enum.hpp"
 #include <map>
 
 class Function: public Node{
@@ -18,7 +20,7 @@ class Function: public Node{
     public:
     Function(Decleration *decleration, Statement* statement,
         ParameterDefinition *firstParameter);
-    void printASM(Bindings *bindings);
+    void printASM(Bindings *bindings, std::vector<VariableDefinition*> globalVariables, std::vector<Enum*> enums);
     void addToMap(std::map<std::string, Type*> &functionMap);
 };
 

@@ -6,6 +6,39 @@
 class Bindings;
 #include <math.h> 
 
+
+
+DotOperator::DotOperator(std::string *structId, std::string *elementId){
+    this->structId = *structId;
+    this->elementId = *elementId;
+}
+
+void DotOperator::printASM(Bindings *bindings){
+    ((Struct*)bindings->getVariable(structId))->placeElementOnStack(bindings,structId,elementId);
+}
+
+Type* DotOperator::getType(Bindings* bindings){
+    ((Struct*)bindings->getVariable(structId))->getElementType(bindings,structId,elementId);
+}
+
+ArrowOperator::ArrowOperator(std::string *pointerId, std::string *elementId){
+    this->pointerId = *pointerId;
+    this->elementId = *elementId;
+}
+
+void ArrowOperator::printASM(Bindings *bindings){
+    //do something different dependent on whether the left hand operator is a struct or a arrow operator or a dot operator
+    //if a struct
+    //first place the memlocation on the stack
+    //then find the offset and add that to the stack address
+    //then dereference the value using the correct type and place that on the stack
+    ((Struct*)bindings->getVariable(pointerId))->placeElementOnStack(bindings,pointerId,elementId);
+}
+
+Type* ArrowOperator::getType(Bindings* bindings){
+    ((Struct*)bindings->getVariable(pointerId))->getElementType(bindings,pointerId,elementId);
+}
+
 UnaryOperatorExpression::UnaryOperatorExpression(Expression *expression){
     this->expression = expression;
 }
@@ -640,11 +673,33 @@ void IndexOperator::printASMAssign(Bindings *bindings){
     delete sub;
 }
 
+SizeOfOperator::SizeOfOperator(Type *type){
+    this->type = type;
+}
+
 void SizeOfOperator::printASM(Bindings *bindings){
-    int size = expression->getType(bindings)->getSize();
+    int size =type->getSize();
+    if(dynamic_cast<Char*>(type) != nullptr){
+        size = 1;
+    }
     NumberConstant *numberConstant = new NumberConstant(size);
     numberConstant->printASM(bindings);
     delete numberConstant;
+}
+
+void SizeOfExpressionOperator::printASM(Bindings *bindings){
+    Type *type = expression->getType(bindings);
+    int size = type->getSize();
+    if(dynamic_cast<Char*>(type) != nullptr){
+        size = 1;
+    }
+    NumberConstant *numberConstant = new NumberConstant(size);
+    numberConstant->printASM(bindings);
+    delete numberConstant;
+}
+
+Type*  SizeOfExpressionOperator::getType(Bindings *bindings){
+    return new Int();
 }
 
 Type*  SizeOfOperator::getType(Bindings *bindings){

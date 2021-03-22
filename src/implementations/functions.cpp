@@ -4,7 +4,9 @@
 #include "parameter.hpp"
 #include "bindings.hpp"
 #include "function.hpp"
+#include "enum.hpp"
 #include <string>
+#include <vector>
 #include <iostream>
 
 Function::Function(Decleration *decleration, Statement* statement,
@@ -20,7 +22,7 @@ void Function::addToMap(std::map<std::string, Type*> &functionMap){
     functionMap[id] = type;
 }
 
-void Function::printASM(Bindings *bindings){
+void Function::printASM(Bindings *bindings, std::vector<VariableDefinition*> globalVariables, std::vector<Enum*> enums){
     std::string params = "";
     //if(firstParameter != nullptr){
         //create the label string needed to find where to jump to
@@ -52,7 +54,22 @@ void Function::printASM(Bindings *bindings){
     //make the frame pointer equal to the stack pointer to begin a new frame
     std::cout << "move    $fp,$sp" << std::endl;
     //increase the bindings offset 
+    for(VariableDefinition *definition: globalVariables){
+        definition->printASM(bindings);
+    }
+    for(Enum* enumDef: enums){
+        enumDef->addVariables(bindings);
+    }
+    bindings->addScope();
     statement->printASM(bindings);
+
+    std::cout << "lw      $ra,-8($fp)" << std::endl;
+    //the frame and stack pointer need to be reset
+    std::cout << "move    $sp,$fp" << std::endl;
+    std::cout << "lw      $fp,-4($fp)" << std::endl;
+    //the load register needs to be jumped to
+    std::cout << "jr     $ra" << std::endl;
+    std::cout << "nop   " <<std::endl;
 
     //functions that return integral types should place that value in $2
     //functions that return floating point values should place that value in $f0

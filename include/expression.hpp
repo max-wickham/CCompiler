@@ -13,6 +13,26 @@ class Expression: public Node{
     virtual Type*  getType(Bindings *bindings) = 0;
 };
 
+class DotOperator: public Node{
+    protected:
+    std::string structId;
+    std::string elementId;
+    public:
+    DotOperator(std::string *structId, std::string *elementId);
+    void printASM(Bindings *bindings);
+    Type* getType(Bindings* bindings);
+};
+
+class ArrowOperator: public Node{
+    protected:
+    std::string pointerId;
+    std::string elementId;
+    public:
+    ArrowOperator(std::string *pointerId, std::string *elementId);
+    void printASM(Bindings *bindings);
+    Type* getType(Bindings* bindings);
+};
+
 class FunctionCall: public Expression{
     protected:
     std::string id;
@@ -229,7 +249,15 @@ class BitwiseNotOperator: public UnaryOperatorExpression{
     Type*  getType(Bindings *bindings);
 };
 
-class SizeOfOperator: public UnaryOperatorExpression{
+class SizeOfOperator: public Expression{
+    Type *type;
+    public:
+    SizeOfOperator(Type *type);
+    void printASM(Bindings *bindings);
+    Type*  getType(Bindings *bindings);
+};
+
+class SizeOfExpressionOperator: public UnaryOperatorExpression{
     public:
     using UnaryOperatorExpression::UnaryOperatorExpression;
     void printASM(Bindings *bindings);

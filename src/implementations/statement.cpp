@@ -253,6 +253,21 @@ void VariableDefinition::printASM(Bindings *bindings){
     }
 }
 
+StructDecleration::StructDecleration(std::string *structId, std::string *id, Statement *nextStatement){
+    this->nextStatement = nextStatement;
+    this->structId = *structId;
+    this->id = *id;
+}
+
+void StructDecleration::printASM(Bindings* bindings){
+    Struct *structT = bindings->getStruct(structId);
+    Decleration *decleration = new Decleration(structT,&id);
+    bindings->addVariable(decleration);
+    if(nextStatement != nullptr){
+        this->nextStatement->printASM(bindings);
+    }
+}
+
 DoWhileLoopStatement::DoWhileLoopStatement(Expression *condition, Statement *statement, Statement *nextStatement){
     this->condition = condition;
     this->statement = statement;
@@ -310,8 +325,8 @@ void CaseStatement::printASM(Bindings* bindings){
         std::cout << ".global " << passLabel <<std::endl;
         std::cout << passLabel << ":" <<std::endl;
         statement->printASM(bindings);
-        std::cout << "j " << bindings->getBreak() <<std::endl;
-        std::cout << "nop" << std::endl;
+       // std::cout << "j " << bindings->getBreak() <<std::endl;
+       // std::cout << "nop" << std::endl;
         std::cout << ".global " << endLabel <<std::endl;
         std::cout << endLabel << ":" <<std::endl;
         //return bindings to expressoin

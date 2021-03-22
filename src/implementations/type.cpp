@@ -14,6 +14,55 @@ void Type::setUnSigned(){
     this->_signed = false;
 }
 
+//struct
+
+Struct::Struct (int size, std::string *id){
+    this->size = size;
+    this->id = *id;
+}
+
+int Struct::getSize(){
+    return this->size;
+}
+
+std::string Struct::getName(){
+    return "struct";
+}
+
+void Struct::loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings){}
+
+void Struct::saveParameter(ReturnRegisters &returnRegisters, Bindings *bindings){}
+
+void Struct::evaluateReturn(Bindings *bindings){}
+
+void Struct::processReturn(Bindings *bindings){}
+
+//places the value at the top of the stack into the register
+void Struct::placeInRegister(Bindings *bindings, RegisterType type){}
+
+//places the value in the register at the top of the stack
+void Struct::extractFromRegister(Bindings *bindings, RegisterType type){}
+
+//extract from register and place in the mem address in the address register
+void Struct::extractFromregister(Bindings *bindings, RegisterType type, RegisterType address){}
+
+//gets the register string from a register type
+std::string Struct::getRegister(RegisterType type){return "";}
+
+void Struct::saveVariable(Bindings *bindings, std::string id){}
+
+void Struct::placeVariableOnStack(Bindings *bindings, std::string id){}
+
+//TODO
+void Struct::placeElementOnStack(Bindings *bindings, std::string id, std::string elementId){}
+//TODO
+Type* Struct::getElementType(Bindings *bindings, std::string id, std::string elementId){}
+//TODO
+
+void Struct::placeVariableOnStack(Bindings *bindings){}
+
+void Struct::beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::string label){}
+
 //void
 Void::Void(){}
 
@@ -25,7 +74,7 @@ std::string Void::getRegister(RegisterType type){return "$zero";}
 
 //integral type
 std::string IntegralType::getAdditionOperator(){
-    return "addu";
+    return "add";
 }
 
 std::string IntegralType::getSubtractionOperator(){
@@ -262,11 +311,11 @@ std::string Char::getName() {
 }
 //-> check this is correct
 void Char::loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings) {
-    if(returnRegisters.a0 == false){
+    if(returnRegisters.a0 == false && returnRegisters.f12 == false){
         std::cout << "sb      $a0," <<  bindings->currentOffset() << "($sp)" << std::endl;
         returnRegisters.a0 = true;
     }
-    else if(returnRegisters.a1 == false){
+    else if(returnRegisters.a1 == false && returnRegisters.f14 == false){
         std::cout << "sb      $a1," <<  bindings->currentOffset() << "($sp)" << std::endl;
         returnRegisters.a1 = true;
     }
@@ -287,7 +336,24 @@ void Char::loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings) {
     returnRegisters.currentMemOffset += this->size;
 }
 //TODO
-void Char::saveParameter(ReturnRegisters &returnRegisters, Bindings *bindings){}
+void Char::saveParameter(ReturnRegisters &returnRegisters, Bindings *bindings){
+    if(returnRegisters.a0 == false && returnRegisters.f12 == false){
+        std::cout << "lb      $a0," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.a0 = true;
+    }
+    else if(returnRegisters.a1 == false && returnRegisters.f14 == false){
+        std::cout << "lb      $a1," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.a1 = true;
+    }
+    else if(returnRegisters.a2 == false){
+        std::cout << "lb      $a2," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.a2 = true;
+    }
+    else if(returnRegisters.a3 == false){
+        std::cout << "lb      $a3," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.a3 = true;
+    }
+}
 //-> check this is correct
 void Char::evaluateReturn(Bindings *bindings) {
     std::cout << "lb      " << this->getRegister(RegisterType::returnReg) 
@@ -380,19 +446,24 @@ std::string Float::getName(){
 }
 //-> check this is correct
 void Float::loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings){
-    if(returnRegisters.f12 == false && returnRegisters.a0 == false){
+    bool integer = (returnRegisters.a0 == false) && (returnRegisters.a1 == false) && (returnRegisters.a2 == false) && (returnRegisters.a3 == false);
+    if(returnRegisters.f12 == false && integer){
         std::cout << "s.s      $f12," <<  bindings->currentOffset() << "($sp)" << std::endl;
         returnRegisters.f12 = true;
     }
-    else if(returnRegisters.f14 == false && returnRegisters.a0 == false){
+    else if(returnRegisters.f14 == false && integer){
         std::cout << "s.s      $f14," <<  bindings->currentOffset() << "($sp)" << std::endl;
         returnRegisters.f14 = true;
     }
-    else if(returnRegisters.a2 == false && returnRegisters.a0 == false){
+    else if(returnRegisters.a1 == false && returnRegisters.f14 == false){
+        std::cout << "sw      $a1," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.a1 = true;
+    }
+    else if(returnRegisters.a2 == false){
         std::cout << "sw      $a2," <<  bindings->currentOffset() << "($sp)" << std::endl;
         returnRegisters.a2 = true;
     }
-    else if(returnRegisters.a3 == false && returnRegisters.a0 == false){
+    else if(returnRegisters.a3 == false){
         std::cout << "sw      $a3," <<  bindings->currentOffset() << "($sp)" << std::endl;
         returnRegisters.a3 = true;
     }
@@ -405,7 +476,29 @@ void Float::loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings){
     returnRegisters.currentMemOffset += this->size;
 }
 //TODO
-void Float::saveParameter(ReturnRegisters &returnRegisters, Bindings *bindings){}
+void Float::saveParameter(ReturnRegisters &returnRegisters, Bindings *bindings){
+    bool integer = (returnRegisters.a0 == false) && (returnRegisters.a1 == false) && (returnRegisters.a2 == false) && (returnRegisters.a3 == false);
+    if(returnRegisters.f12 == false && integer){
+        std::cout << "l.s      $f12," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.f12 = true;
+    }
+    else if(returnRegisters.f14 == false && integer){
+        std::cout << "l.s      $f14," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.f14 = true;
+    }
+    else if(returnRegisters.a1 == false && returnRegisters.f14 == false){
+        std::cout << "lw      $a1," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.a1 = true;
+    }
+    else if(returnRegisters.a2 == false){
+        std::cout << "lw      $a2," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.a2 = true;
+    }
+    else if(returnRegisters.a3 == false){
+        std::cout << "lw      $a3," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.a3 = true;
+    }
+}
 //-> check this is correct
 void Float::evaluateReturn(Bindings *bindings){
     std::cout << "l.s      " << this->getRegister(RegisterType::returnReg) 
@@ -537,20 +630,27 @@ std::string Double::getName(){
 }
 //todo
 void Double::loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings){
-    if(returnRegisters.f12 == false && returnRegisters.a0 == false){
+    bool integer = (returnRegisters.a0 == false) && (returnRegisters.a1 == false) && (returnRegisters.a2 == false) && (returnRegisters.a3 == false);
+    if(returnRegisters.f12 == false && integer == false){
         std::cout << "s.d      $f12," <<  bindings->currentOffset() << "($sp)" << std::endl;
         returnRegisters.f12 = true;
+        returnRegisters.f13 = true;
     }
-    else if(returnRegisters.f14 == false && returnRegisters.a0 == false){
+    else if(returnRegisters.f14 == false && integer == false){
         std::cout << "s.d      $f14," <<  bindings->currentOffset() << "($sp)" << std::endl;
         returnRegisters.f14 = true;
+        returnRegisters.f15 = true;
     }
-    else if(returnRegisters.a2 == false && returnRegisters.a0 == false){
-        std::cout << "sw      $a2," <<  bindings->currentOffset() << "($sp)" << std::endl;
+    else if(returnRegisters.a1 == false && returnRegisters.f14 == false){
+        std::cout << "sw      $a1," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        std::cout << "sw      $a2," <<  bindings->currentOffset() + 4 << "($sp)" << std::endl;
+        returnRegisters.a1 = true;
         returnRegisters.a2 = true;
     }
-    else if(returnRegisters.a3 == false && returnRegisters.a0 == false){
-        std::cout << "sw      $a3," <<  bindings->currentOffset() << "($sp)" << std::endl;
+    else if(returnRegisters.a2 == false){
+        std::cout << "sw      $a2," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        std::cout << "sw      $a3," <<  bindings->currentOffset() + 4 << "($sp)" << std::endl;
+        returnRegisters.a2 = true;
         returnRegisters.a3 = true;
     }
     else{
@@ -563,7 +663,31 @@ void Double::loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings)
     returnRegisters.currentMemOffset += this->size;
 }
 //TODO
-void Double::saveParameter(ReturnRegisters &returnRegisters, Bindings *bindings){}
+void Double::saveParameter(ReturnRegisters &returnRegisters, Bindings *bindings){
+    bool integer = (returnRegisters.a0 == false) && (returnRegisters.a1 == false) && (returnRegisters.a2 == false) && (returnRegisters.a3 == false);
+    if(returnRegisters.f12 == false && integer == false){
+        std::cout << "l.d      $f12," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.f12 = true;
+        returnRegisters.f13 = true;
+    }
+    else if(returnRegisters.f14 == false && integer == false){
+        std::cout << "l.d      $f14," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        returnRegisters.f14 = true;
+        returnRegisters.f15 = true;
+    }
+    else if(returnRegisters.a1 == false && returnRegisters.f14 == false){
+        std::cout << "lw      $a1," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        std::cout << "lw      $a2," <<  bindings->currentOffset() + 4 << "($sp)" << std::endl;
+        returnRegisters.a1 = true;
+        returnRegisters.a2 = true;
+    }
+    else if(returnRegisters.a2 == false){
+        std::cout << "lw      $a2," <<  bindings->currentOffset() << "($sp)" << std::endl;
+        std::cout << "lw      $a3," <<  bindings->currentOffset() + 4 << "($sp)" << std::endl;
+        returnRegisters.a2 = true;
+        returnRegisters.a3 = true;
+    }
+}
 //todo
 void Double::evaluateReturn(Bindings *bindings){
     std::cout << "l.s      " << this->getRegister(RegisterType::returnReg) 

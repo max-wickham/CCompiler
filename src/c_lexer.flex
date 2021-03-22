@@ -39,6 +39,8 @@ ALL .
 (double)	{ return T_double; }
 (signed)	{ return T_signed; }
 (unsigned)	{ return T_unsigned; }
+(enum)	{ return T_enum; }
+(struct)	{ return T_struct; }
 
    /* storage classes */ 
    /*(auto)      {return T_auto;}*/

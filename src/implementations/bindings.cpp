@@ -20,7 +20,7 @@ Bindings* Bindings::createGlobalBindings(){
     //Type * type = functions->at("y");
     Bindings *newBindings = new Bindings();
     std::list<std::map<std::string, BindingData>>::iterator it;
-    newBindings->bindings.begin() = bindings.begin();
+    newBindings->bindings = bindings;
     newBindings->current_offset = this->current_offset;
     newBindings->functions = functions;
     //std::cout << newBindings->functions << std::endl;
@@ -62,7 +62,7 @@ void Bindings::addVariable(Decleration *decleration){
     data.size = decleration->type->getSize();
     data.offset = current_offset;
     //std::cout << "cureent name " << decleration->id << std::endl;
-    //std::cout << "cureent offset " << current_offset << std::endl;
+    //std::cout << "cureent value " << current_offset << std::endl;
     current_offset -= data.size;
     //std::cout << "cureent offset " << current_offset << std::endl;
     bindings.begin()->insert(std::pair<std::string,BindingData>(decleration->id,data));
@@ -73,18 +73,41 @@ void Bindings::addFunction(std::string id, Type *type){
     functions->insert(std::pair<std::string,Type*>(id,type));
 }
 
+void Bindings::addStruct(std::string id, StructDefinition *structDefinition){
+    BindingsStruct bindingsStruct;
+    int totaloffset = 0;
+    for(StructEntry *entry: structDefinition->elements){
+        BindingData data;
+        data.type = entry->type;
+        data.size = entry->type->getSize();
+        data.offset = totaloffset;
+        totaloffset -= data.size;
+        bindingsStruct.elements[entry->id] = data;
+    }
+    Struct *structT = new Struct(totaloffset * -1,&id);
+    bindingsStruct.structT = structT;  
+    structs[structDefinition->id] = bindingsStruct;
+}
+
 Type* Bindings::getFunction(std::string id){
     return functions->at(id);
 }
 
 Type* Bindings::getVariable(std::string id){
+    //std::cout << "get variable " << id << std::endl;
     std::list<std::map<std::string, BindingData>>::iterator it;
     for (it = bindings.begin(); it != bindings.end(); ++it){
         if(it->find(id) != it->end()){
             return it->at(id).type;
         }
     }
+    //std::cout << "got variable " << std::endl;
     return 0;
+}
+
+Struct* Bindings::getStruct(std::string id){
+        //std::cout << "get variable " << id << std::endl;
+    return structs.at(id).structT;
 }
 
 void Bindings::setBreak(std::string label){

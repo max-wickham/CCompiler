@@ -45,6 +45,15 @@ class VariableDefinition: public Statement{
     void printASM(Bindings* bindings) override;
 };
 
+class StructDecleration: public Statement{
+    protected:
+    std::string structId;
+    std::string id;
+    public:
+    StructDecleration(std::string *structId, std::string *id, Statement *nextStatement);
+    void printASM(Bindings* bindings) override;
+};
+
 class ReturnStatement: public Statement{
     protected:
     Expression *expression;

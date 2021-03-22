@@ -10,6 +10,8 @@
 #include "statement.hpp"
 #include "type.hpp"
 #include "top.hpp"
+#include "enum.hpp"
+#include "struct.hpp"
 #include <iostream>
 
 
@@ -36,6 +38,10 @@ void yyerror(const char *);
   ParameterDefinition *parameterDefinition;
   Parameter *parameter;
   Type *type;
+  Enum *enumm;
+  EnumEntry *enumEntry;
+  StructDefinition *structDef;
+  StructEntry *structEntry;
 }
 
 %token 
@@ -49,7 +55,7 @@ void yyerror(const char *);
 			T_void T_char T_short T_int T_long T_float T_double T_signed T_unsigned
 			T_typedef T_static 
 			T_volatile T_goto T_break T_continue
-			T_case T_default T_switch T_ellipsis T_stringliteral T_float_const T_double_constant
+			T_case T_default T_switch T_ellipsis T_stringliteral T_float_const T_double_constant T_enum T_struct
 			
 %nonassoc		T_rrb
 %nonassoc		T_else
@@ -59,6 +65,7 @@ void yyerror(const char *);
 
 %type <statement> STATEMENT SELECTIONSTATEMENT ITERATIONSTATEMENT EXPRESSIONSTATEMENT CASESTATEMENT SWITCHSTATEMENT
                   RETURNSTATEMENT VARIABLEDEFINITIONSTATEMENT GLOBALVARIABLE BREAKSTATEMENT CONTINUESTATEMENT
+                  STRUCTDECLERATIONSTATEMENT
 
 %type <type>     TYPE
 
@@ -77,11 +84,18 @@ void yyerror(const char *);
                 T_typedef T_double  T_short T_void T_const T_float_const T_double_constant
 
                   
-%type <function> FUNCTION
+%type <function> FUNCTION FUNCTIONDEFINITION
 
 
 %type	<number>   T_int_const
 
+%type <enumm> ENUM
+
+%type <enumEntry> ENUMENTRY
+
+%type <structDef> STRUCTDEFINITION
+
+%type <structEntry> STRUCTENTRY
 
 %start ROOT
                         
@@ -92,9 +106,15 @@ ROOT : TOP {g_root = $1; }
      ;
 
 TOP  : FUNCTION {$$ = new Top(); $$->addFunction($1);}
-     | GLOBALVARIABLE {{$$ = new Top(); $$->addGlobal((VariableDefinition*)$1);}}
-     | TOP FUNCTION {$$->addFunction($2);}    
-     | TOP GLOBALVARIABLE {$$->addGlobal((VariableDefinition*)$2);}
+     | FUNCTIONDEFINITION {$$ = new Top(); $$->addFunctionDefinition($1);}
+     | GLOBALVARIABLE {$$ = new Top(); $$->addGlobal((VariableDefinition*)$1);}
+     | ENUM           {$$ = new Top(); $$->addEnum($1);}
+     | STRUCTDEFINITION {$$ = new Top(); $$->addStruct($1);}
+     | TOP FUNCTION {$$ = $1; $$->addFunction($2);}    
+     | TOP FUNCTIONDEFINITION {$$ = $1; $$->addFunctionDefinition($2);}    
+     | TOP GLOBALVARIABLE {$$ = $1; $$->addGlobal((VariableDefinition*)$2);}
+     | TOP ENUM           {$$ = $1; $$->addEnum($2);}
+     | TOP STRUCTDEFINITION {$$ = $1; $$->addStruct($2);}
      ;
 
 GLOBALVARIABLE : TYPE T_identifier T_sc  {$$ = new VariableDefinition(new Decleration($1,$2),nullptr);}
@@ -102,9 +122,27 @@ GLOBALVARIABLE : TYPE T_identifier T_sc  {$$ = new VariableDefinition(new Decler
                | TYPE T_identifier T_lsb T_int_const T_rsb T_sc {$$ = new VariableDefinition(new Decleration(new Array($1,$4),$2),nullptr);}      
                ;
 
+STRUCTDEFINITION    : T_struct T_identifier T_lcb {$$ = new StructDefinition($2);}
+                    | STRUCTDEFINITION TYPE T_identifier T_sc {$$ = $1; $1->elements.push_back(new StructEntry($2,$3));}
+                    | STRUCTDEFINITION T_rcb T_sc {$$ = $1;}
+                    ;
+
+
+
+ENUM           : T_enum T_identifier T_lcb ENUMENTRY T_sc {$$ = new Enum($2,$4);std::cout << "";}
+               ;
+
+ENUMENTRY      : T_identifier T_rcb   { $$ = new EnumEntry($1, nullptr);std::cout << "";}
+               | T_identifier T_equal T_int_const T_rcb { $$ = new EnumEntry($1,$3, nullptr);}
+               | T_identifier T_comma ENUMENTRY { $$ = new EnumEntry($1, $3);}
+               | T_identifier T_equal T_int_const T_comma ENUMENTRY { $$ = new EnumEntry($1,$3, $5);}
+               ;
+
     
 FUNCTION : TYPE T_identifier PARAMETER STATEMENT {$$ = new Function(new Decleration($1,$2),$4,$3);}
          ;
+
+FUNCTIONDEFINITION : TYPE T_identifier PARAMETER T_sc {$$ = new Function(new Decleration($1,$2),nullptr,nullptr);}
 
 PARAMETER     : TYPE T_identifier T_rrb             {$$ = new ParameterDefinition(new Decleration($1,$2),nullptr) ; std::cout << "";}
               | TYPE T_identifier T_comma PARAMETER {$$ = new ParameterDefinition(new Decleration($1,$2),$4); std::cout << "";}
@@ -164,6 +202,9 @@ ITERATIONSTATEMENT  : T_while T_lrb EXPRESSION T_rrb STATEMENT STATEMENT {$$ = n
 VARIABLEDEFINITIONSTATEMENT : TYPE T_identifier T_sc STATEMENT                      {$$ = new VariableDefinition(new Decleration($1,$2),$4);}
                             | TYPE T_identifier T_equal EXPRESSION T_sc STATEMENT {$$ = new VariableDefinition(new Decleration($1,$2,$4),$6);std::cout << "";}
                             | TYPE T_identifier T_lsb T_int_const T_rsb T_sc STATEMENT {$$ = new VariableDefinition(new Decleration(new Array($1,$4),$2),$7);}      
+                            ;
+
+STRUCTDECLERATIONSTATEMENT  : T_struct T_identifier T_identifier T_sc STATEMENT {$$ = new StructDecleration($2,$3,$5);}
                             ;
 
 SWITCHSTATEMENT             : T_switch T_lrb EXPRESSION T_rrb T_lcb CASESTATEMENT STATEMENT { $$ = new SwitchStatement($3,$6,$7);}
@@ -275,11 +316,16 @@ UNARYEXP       : DEREFERENCEEXPRESSION {$$ = $1;}
                | T_inc UNARYEXP   {$$ = new AssignmentOperator($2,new AdditionOperator($2,new NumberConstant(1)));}   
                | T_dec UNARYEXP   {$$ = new AssignmentOperator($2,new SubtractionOperator($2,new NumberConstant(1)));} 
                | T_sizeof UNARYEXP {$$ = $2;}        /////////////////////////////////////
-               | T_sizeof T_lrb EXPRESSION T_rrb {$$ = new SizeOfOperator($3);} ///////////////////////////////////
+               | T_sizeof T_lrb TYPE T_rrb {$$ = new SizeOfOperator($3);} ///////////////////////////////////
+               | T_sizeof T_lrb EXPRESSION T_rrb {$$ = new SizeOfExpressionOperator($3);} ///////////////////////////////////
+               | T_sizeof TYPE {$$ = new SizeOfOperator($2);} ///////////////////////////////////
+               | T_sizeof EXPRESSION {$$ = new SizeOfExpressionOperator($2);} ///////////////////////////////////
                | T_sub UNARYEXP   { $$ = new MultiplicationOperator($2,new NumberConstant(-1)); }
                | T_not UNARYEXP   { $$ = new NotOperator($2); }   
                | T_and UNARYEXP   { $$ = new AddressOperator($2); std::cout << "";}
                | T_identifier T_lrb ARGUMENT { $$ = new FunctionCall($1,$3);}
+               | T_identifier T_lrb T_rrb { $$ = new FunctionCall($1,nullptr);}
+
 
                ;
 
@@ -289,8 +335,8 @@ DEREFERENCEEXPRESSION : POSTFIXEXP {$$ = $1;}
 
 POSTFIXEXP     : PRIMARYEXP { $$ = $1; }
                | POSTFIXEXP T_lsb EXPRESSION T_rsb {$$ = new IndexOperator($1,$3);} ////////////////////////
-               | POSTFIXEXP T_dot T_identifier { ;}     ////////////////////////
-               | POSTFIXEXP T_arrow T_identifier {}        ////////////////////////
+               | T_identifier T_dot T_identifier { new DotOperator($1,$3);}     ////////////////////////
+               | T_identifier T_arrow T_identifier { new ArrowOperator($1,$3);}        ////////////////////////
                | POSTFIXEXP T_inc {$$ = new AssignmentOperator($1,new AdditionOperator($1,new NumberConstant(1)));}               ////////////////////////
                | POSTFIXEXP T_dec {$$ = new AssignmentOperator($1,new SubtractionOperator($1,new NumberConstant(1)));}               ////////////////////////
                ;
