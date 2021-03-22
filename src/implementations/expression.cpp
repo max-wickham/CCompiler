@@ -187,18 +187,18 @@ NumberConstant::NumberConstant(int value) {
 }
 
 void NumberConstant::printASM(Bindings *bindings){
-    if(((value & 4294901760) >> 16) == 0){
+    // if(((value & 4294901760) >> 16) == 0){
         std::cout << "li    $v0," << value << std::endl;
         std::cout << "sw    $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
-    }
-    else{
-        int upper = (value & 4294901760) >> 16;
-        int lower = (value & 65535);
-        std::cout << "move    $v0,$zero" << std::endl;
-        std::cout << "lui    $v0," << upper << std::endl;
-        std::cout << "addi    $v0," << lower << std::endl;
-        std::cout << "sw    $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
-    }
+    // }
+    // else{
+    //     int upper = (value & 4294901760) >> 16;
+    //     int lower = (value & 65535);
+    //     std::cout << "move    $v0,$zero" << std::endl;
+    //     std::cout << "lui    $v0," << upper << std::endl;
+    //     std::cout << "addi    $v0," << lower << std::endl;
+    //     std::cout << "sw    $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
+    // }
 }
 
 Type*  NumberConstant::getType(Bindings *bindings){
@@ -325,7 +325,7 @@ void AdditionOperator::printASM(Bindings *bindings){
        if (dynamic_cast<Pointer*>(rightExpression->getType(bindings)) == nullptr){
             if (dynamic_cast<Char*>(((Pointer*)leftExpression->getType(bindings))->getType()) == nullptr){
                 int shift = log2(((Pointer*)leftExpression->getType(bindings))->getType()->getSize());
-                std::cout << "sllv    " << reg << "," << reg << shift << std::endl;
+                std::cout << "sll    " << reg << "," << reg << "," << shift << std::endl;
             }
         } 
     }
@@ -349,6 +349,15 @@ void SubtractionOperator::printASM(Bindings *bindings){
     bindings->setOffset(bindings->currentOffset() + leftExpression->getType(bindings)->getSize());
     leftExpression->getType(bindings)->placeInRegister(bindings, RegisterType::leftReg);
     //next add the two registers and place in evaluation register
+    std::string reg = rightExpression->getType(bindings)->getRegister(RegisterType::rightReg);
+    if (dynamic_cast<Pointer*>(leftExpression->getType(bindings)) != nullptr){
+       if (dynamic_cast<Pointer*>(rightExpression->getType(bindings)) == nullptr){
+            if (dynamic_cast<Char*>(((Pointer*)leftExpression->getType(bindings))->getType()) == nullptr){
+                int shift = log2(((Pointer*)leftExpression->getType(bindings))->getType()->getSize());
+                std::cout << "sll    " << reg << "," << reg << "," << shift << std::endl;
+            }
+        } 
+    }
     std::string evalReg = leftExpression->getType(bindings)->getRegister(RegisterType::evaluateReg);
     std::string leftReg = leftExpression->getType(bindings)->getRegister(RegisterType::leftReg);
     std::string rightReg = leftExpression->getType(bindings)->getRegister(RegisterType::rightReg);
@@ -669,10 +678,9 @@ Type* BinaryOperatorExpression::getType(Bindings *bindings){
 }
 
 void IndexOperator::printASM(Bindings *bindings){
-    std::cout << "start index " << std::endl;
     //add one to the address
-    AdditionOperator *add = new AdditionOperator(leftExpression,rightExpression);
-    AssignmentOperator *assign1 = new AssignmentOperator(leftExpression,add);
+    AdditionOperator *sub = new AdditionOperator(leftExpression,rightExpression);
+    AssignmentOperator *assign1 = new AssignmentOperator(leftExpression,sub);
     assign1->printASM(bindings);
     //load the address onto memory
     leftExpression->printASM(bindings);
@@ -681,15 +689,14 @@ void IndexOperator::printASM(Bindings *bindings){
     int size = ((Pointer*)((Variable*)leftExpression->getType(bindings)))->getType()->getSize();
     bindings->setOffset(bindings->currentOffset() - size);
     //reset the address
-    SubtractionOperator *sub = new SubtractionOperator(leftExpression,rightExpression);
-    AssignmentOperator *assign2 = new AssignmentOperator(leftExpression,sub);
+    SubtractionOperator *add = new SubtractionOperator(leftExpression,rightExpression);
+    AssignmentOperator *assign2 = new AssignmentOperator(leftExpression,add);
     assign2->printASM(bindings);
     bindings->setOffset(bindings->currentOffset() + size);
     delete assign1;
     delete assign2;
     delete add;
     delete sub;
-    std::cout << "end index " << std::endl;
 }
 
 void IndexOperator::printASMAssign(Bindings *bindings){

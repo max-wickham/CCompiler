@@ -284,13 +284,16 @@ void Pointer::storeDereference(Bindings *bindings){
 
 void Pointer::initialise(Bindings *bindings){
     //save the bindings offset at the bindings offset
-    bindings->setOffset(bindings->currentOffset() - 4);
-    NumberConstant *constant = new NumberConstant(bindings->currentOffset()+4);
-    constant->printASM(bindings);
-    bindings->setOffset(bindings->currentOffset() + 4);
-    delete constant;
+    //store the current memory location at the previouse mempry location
     int size = type->getSize();
-    bindings->setOffset(bindings->currentOffset() + size);
+    std::cout << "addiu $v0,$fp," << bindings->currentOffset() - (size-4) <<std::endl;
+    std::cout << "sw    $v0," << bindings->currentOffset()+4 << "($fp)" << std::endl;
+    //bindings->setOffset(bindings->currentOffset() - 4);
+    //NumberConstant *constant = new NumberConstant(bindings->currentOffset()+4);
+    //constant->printASM(bindings);
+    //bindings->setOffset(bindings->currentOffset() + 4);
+    //delete constant
+    bindings->setOffset(bindings->currentOffset() - size);
 }
 
 Array::Array(Type *type, int arraySize){
@@ -300,13 +303,15 @@ Array::Array(Type *type, int arraySize){
 
 void Array::initialise(Bindings *bindings){
     //save the bindings offset at the bindings offset
-    bindings->setOffset(bindings->currentOffset() - 4);
-    NumberConstant *constant = new NumberConstant(bindings->currentOffset()+4);
-    constant->printASM(bindings);
-    bindings->setOffset(bindings->currentOffset() + 4);
-    delete constant;
+    //bindings->setOffset(bindings->currentOffset() - 4);
+    //NumberConstant *constant = new NumberConstant(bindings->currentOffset()+4);
+    //constant->printASM(bindings);
+    //bindings->setOffset(bindings->currentOffset() + 4);
+    //delete constant;
     int total = type->getSize()*arraySize;
-    bindings->setOffset(bindings->currentOffset() + total);
+    std::cout << "addiu $v0,$fp," << bindings->currentOffset() - (total-4) <<std::endl;
+    std::cout << "sw    $v0," << bindings->currentOffset()+4 << "($fp)" << std::endl;
+    bindings->setOffset(bindings->currentOffset() - total);
 }
 
 //char
