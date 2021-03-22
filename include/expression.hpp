@@ -116,7 +116,7 @@ class BinaryOperatorExpression: public Expression{
 
     public:
     BinaryOperatorExpression(Expression *leftExpression, Expression *rightExpression);
-    Type* getType(Bindings *bindings) override;
+    virtual Type* getType(Bindings *bindings);
 };
 
 class AssignmentOperator: public BinaryOperatorExpression{
@@ -221,6 +221,7 @@ class IndexOperator: public BinaryOperatorExpression{
     using BinaryOperatorExpression::BinaryOperatorExpression;
     void printASMAssign(Bindings *bindings);
     void printASM(Bindings *bindings);
+    Type* getType(Bindings *bindings) override;
 };
 
 class DefreferenceOperator: public UnaryOperatorExpression{

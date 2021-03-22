@@ -115,26 +115,39 @@ StringConstant::StringConstant(std::string *value){
 }
 //---check
 void StringConstant::printASM(Bindings *bindings){
-    //first reverse the order of the string
-    std::string input = "";
-    for(char &c: value){
-        input = input + c;
+    std::string label = bindings->createLabel("string");
+    std::cout << ".data" <<std::endl;
+    std::cout << label << ": .asciiz " << "\"" << value << "\"" << std::endl;
+    std::cout << ".text" <<std::endl;
+    bindings->setOffset(bindings->currentOffset() - 1*value.size() - 4);
+    while(bindings->currentOffset()%4!=0){
+        bindings->setOffset(bindings->currentOffset() - 1);
     }
-    //load the values into memory
-    for(char &c: input){
-        NumberConstant *constant = new NumberConstant(c);
-        constant->printASM(bindings);
-        bindings->setOffset(bindings->currentOffset()-1);
-        delete constant;
-    }
-        //store the current mem address in a register
-    std::cout << "li    $t2," << (bindings->currentOffset() + 1) << std::endl;
-    std::cout << "addu    $t2,$t2,$fp" << std::endl;
-    while(bindings->currentOffset() % 4 != 0){
-        bindings->setOffset(bindings->currentOffset()-1);
-    }
-    //load the saved mem address into memory
-    std::cout << "sw    $t2," << bindings->currentOffset() << "($fp)" << std::endl;
+    std::cout << "la $v0, " << label << std::endl;
+    std::cout << "sw $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
+    // //first reverse the order of the string
+    // std::string input = "";
+    // for(char &c: value){
+    //     input = c + input;
+    // }
+    // //load the values into memory
+    // //store the current mem address in a register
+    // bindings->setOffset(bindings->currentOffset()-(4-input.size()%4));
+    // std::cout << "li $v0," << (int)'\0' << std::endl;
+    // std::cout << "sb $v0," << bindings->currentOffset() << "($fp)" <<std::endl;
+    // bindings->setOffset(bindings->currentOffset()-1);
+    // for(char &c: input){
+    //     //NumberConstant *constant = new NumberConstant(c);
+    //     //constant->printASM(bindings);
+    //     std::cout << "li $v0," << (int)c << std::endl;
+    //     std::cout << "sb $v0," << bindings->currentOffset() << "($fp)" <<std::endl;
+    //     bindings->setOffset(bindings->currentOffset()-1);
+    //     //delete constant;
+    // }
+    // std::cout << "li    $t2," << (bindings->currentOffset() + 1) << std::endl;
+    // std::cout << "addu    $t2,$t2,$fp" << std::endl;
+    // //load the saved mem address into memory
+    // std::cout << "sw    $t2," << bindings->currentOffset() << "($fp)" << std::endl;
 }
 //---check
 Type*  StringConstant::getType(Bindings *bindings){return new Array(new Char(),value.size());}
@@ -716,6 +729,10 @@ void IndexOperator::printASMAssign(Bindings *bindings){
     delete assign2;
     delete add;
     delete sub;
+}
+
+Type* IndexOperator::getType(Bindings *bindings){
+    return ((Array*)((Variable*)leftExpression->getType(bindings)))->getType();
 }
 
 SizeOfOperator::SizeOfOperator(Type *type){

@@ -256,7 +256,7 @@ public:
 //TODO
 	void saveParameter(ReturnRegisters &returnRegisters, Bindings *bindings) override;
 
-	void evaluateReturn(Bindings *bindings) override;
+	virtual void evaluateReturn(Bindings *bindings);
 
 	void processReturn(Bindings *bindings) override;
 
