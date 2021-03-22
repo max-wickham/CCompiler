@@ -20,20 +20,21 @@ class DotOperator: public Expression{
     std::string elementId;
     public:
     DotOperator(std::string *structId, std::string *elementId);
-    void printASM(Bindings *bindings) override;
+    void printASM(Bindings *bindings);
     void printASMAssign(Bindings *bindings);
     Type* getType(Bindings* bindings) override;
 };
 
-class ArrowOperator: public Expression{
-    protected:
-    std::string pointerId;
-    std::string elementId;
-    public:
-    ArrowOperator(std::string *pointerId, std::string *elementId);
-    void printASM(Bindings *bindings);
-    Type* getType(Bindings* bindings);
-};
+// class ArrowOperator: public Expression{
+//     protected:
+//     std::string pointerId;
+//     std::string elementId;
+//     public:
+//     ArrowOperator(std::string *pointerId, std::string *elementId);
+//     void printASM(Bindings *bindings);
+//     Type* getType(Bindings* bindings);
+// };
+
 
 class FunctionCall: public Expression{
     protected:

@@ -59,6 +59,7 @@ int Bindings::stackPosition(std::string id){
 
 int Bindings::elementPosition(std::string structId, std::string elementId){
     int structOffset = this->stackPosition(structId);
+    structId = ((Struct*)this->getVariable(structId))->getName();
     int elementOffset = structs.at(structId).elements.at(elementId).offset;
     return structOffset + elementOffset;
 }
@@ -89,10 +90,12 @@ void Bindings::addStruct(std::string id, StructDefinition *structDefinition){
         data.size = entry->type->getSize();
         data.offset = totaloffset;
         totaloffset -= data.size;
+        //std::cout << "addign entry " << entry->id << std::endl;
         bindingsStruct.elements[entry->id] = data;
     }
     Struct *structT = new Struct(totaloffset * -1,&id);
     bindingsStruct.structT = structT;  
+    //std::cout << "addign struct " << id << std::endl;
     structs[structDefinition->id] = bindingsStruct;
     //std::cout << "added struct bindings" <<std::endl;
 }
@@ -114,7 +117,10 @@ Type* Bindings::getVariable(std::string id){
 }
 
 Type* Bindings::getElement(std::string structId, std::string elementId){
+    structId = ((Struct*)this->getVariable(structId))->getName();
+    BindingsStruct bin = structs.at(structId);
     Type *type = structs.at(structId).elements.at(elementId).type;
+    return type;
 }
 
 Struct* Bindings::getStruct(std::string id){

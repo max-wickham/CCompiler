@@ -15,7 +15,7 @@ DotOperator::DotOperator(std::string *structId, std::string *elementId){
 }
 
 void DotOperator::printASM(Bindings *bindings){
-    //((Struct*)bindings->getVariable(structId))->placeElementOnStack(bindings,structId,elementId);
+     //((Struct*)bindings->getVariable(structId))->placeElementOnStack(bindings,structId,elementId);
     int offset = bindings->elementPosition(structId,elementId);
     Type *type = bindings->getElement(structId,elementId);
     type->placeVariableOnStack(bindings,offset);
@@ -24,34 +24,32 @@ void DotOperator::printASM(Bindings *bindings){
 void DotOperator::printASMAssign(Bindings *bindings){
     //take the value on the stack and place it in the 
     //memory location given by the struct offset and the element offset
-    std::cout << "dot operator assign " <<std::endl;
     int offset = bindings->elementPosition(structId,elementId);
     Type *type = bindings->getElement(structId,elementId);
     type->saveVariable(bindings,offset);
-    std::cout << "dot operator assign finished" <<std::endl;
 }
 
 Type* DotOperator::getType(Bindings* bindings){
-    ((Struct*)bindings->getVariable(structId))->getElementType(bindings,structId,elementId);
+    return ((Struct*)bindings->getVariable(structId))->getElementType(bindings,structId,elementId);
+    //return new Int();
 }
+// ArrowOperator::ArrowOperator(std::string *pointerId, std::string *elementId){
+//     this->pointerId = *pointerId;
+//     this->elementId = *elementId;
+// }
 
-ArrowOperator::ArrowOperator(std::string *pointerId, std::string *elementId){
-    this->pointerId = *pointerId;
-    this->elementId = *elementId;
-}
+// void ArrowOperator::printASM(Bindings *bindings){
+//     //do something different dependent on whether the left hand operator is a struct or a arrow operator or a dot operator
+//     //if a struct
+//     //first place the memlocation on the stack
+//     //then find the offset and add that to the stack address
+//     //then dereference the value using the correct type and place that on the stack
+//  //   ((Struct*)bindings->getVariable(pointerId))->placeElementOnStack(bindings,pointerId,elementId);
+// }
 
-void ArrowOperator::printASM(Bindings *bindings){
-    //do something different dependent on whether the left hand operator is a struct or a arrow operator or a dot operator
-    //if a struct
-    //first place the memlocation on the stack
-    //then find the offset and add that to the stack address
-    //then dereference the value using the correct type and place that on the stack
- //   ((Struct*)bindings->getVariable(pointerId))->placeElementOnStack(bindings,pointerId,elementId);
-}
-
-Type* ArrowOperator::getType(Bindings* bindings){
-    ((Struct*)bindings->getVariable(pointerId))->getElementType(bindings,pointerId,elementId);
-}
+// Type* ArrowOperator::getType(Bindings* bindings){
+//     ((Struct*)bindings->getVariable(pointerId))->getElementType(bindings,pointerId,elementId);
+// }
 
 UnaryOperatorExpression::UnaryOperatorExpression(Expression *expression){
     this->expression = expression;

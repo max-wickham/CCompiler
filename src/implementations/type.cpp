@@ -26,7 +26,7 @@ int Struct::getSize(){
 }
 
 std::string Struct::getName(){
-    return "struct";
+    return id;
 }
 
 void Struct::loadParameter(ReturnRegisters &returnRegisters, Bindings *bindings){}
@@ -53,7 +53,10 @@ void Struct::saveVariable(Bindings *bindings, std::string id){}
 
 void Struct::placeVariableOnStack(Bindings *bindings, std::string id){}
 //TODO
-Type* Struct::getElementType(Bindings *bindings, std::string id, std::string elementId){}
+Type* Struct::getElementType(Bindings *bindings, std::string id, std::string elementId){
+    //id = ((Struct*)bindings->getVariable(id))->getName();
+    return bindings->getElement(id,elementId);
+}
 //TODO
 
 void Struct::placeVariableOnStack(Bindings *bindings){}

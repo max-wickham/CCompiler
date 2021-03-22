@@ -23,18 +23,12 @@ void Top::printASM(){
     std::map<std::string, Type*> *functionsMap = &functionsMapOriginal;
     Bindings *bindings = new Bindings(functionsMap);
 
-    for(StructDefinition* structDef: structs){
-        // int size = 0;
-        // for(StructEntry entry: structDef->elements){
-        //     size += entry.type->getSize();
-        // }
-        //std::cout << "adding struct top  " << structDef->id << std::endl;
-        bindings->addStruct(structDef->id,structDef);
-    }
-
     bindings->addScope();
     for(Function * function: functions){
         Bindings *newBindings = bindings->createGlobalBindings();
+        for(StructDefinition* structDef: structs){
+            newBindings->addStruct(structDef->id,structDef);
+        }
         function->printASM(newBindings,globalVariables,enums);
         delete newBindings;
     }

@@ -13,7 +13,7 @@
 #include "enum.hpp"
 #include "struct.hpp"
 #include <iostream>
-
+#include <typeinfo>
 
  #include <cassert>
 
@@ -223,7 +223,7 @@ EXPRESSION : ASSIGNEXPRESSION {$$ = $1;}
 ASSIGNEXPRESSION : CONDEXP {$$ = $1;}
            | UNARYEXP ASSIGN_OP ASSIGNEXPRESSION {  
              if(*$2 == "="){
-               $$ = new AssignmentOperator($1,$3);std::cout <<  ""; if($1==nullptr){std::cout <<  "";}
+               $$ = new AssignmentOperator($1,$3); std::cout <<  "";
              }
              else if(*$2 == "+="){
                {$$ = new AssignmentOperator($1,new AdditionOperator($1,$3));}
@@ -314,6 +314,7 @@ MULTEXP        : UNARYEXP {$$ = $1;}
                ; 
 
 UNARYEXP       : DEREFERENCEEXPRESSION {$$ = $1;}
+               | T_identifier T_dot T_identifier { $$ = new DotOperator($1,$3);}
                | T_inc UNARYEXP   {$$ = new AssignmentOperator($2,new AdditionOperator($2,new NumberConstant(1)));}   
                | T_dec UNARYEXP   {$$ = new AssignmentOperator($2,new SubtractionOperator($2,new NumberConstant(1)));} 
                | T_sizeof UNARYEXP {$$ = $2;}        /////////////////////////////////////
@@ -336,8 +337,6 @@ DEREFERENCEEXPRESSION : POSTFIXEXP {$$ = $1;}
 
 POSTFIXEXP     : PRIMARYEXP { $$ = $1; }
                | POSTFIXEXP T_lsb EXPRESSION T_rsb {$$ = new IndexOperator($1,$3);} ////////////////////////
-               | T_identifier T_dot T_identifier { new DotOperator($1,$3); std::cout << "dot operator";}     ////////////////////////
-               | T_identifier T_arrow T_identifier { new ArrowOperator($1,$3);}        ////////////////////////
                | POSTFIXEXP T_inc {$$ = new AssignmentOperator($1,new AdditionOperator($1,new NumberConstant(1)));}               ////////////////////////
                | POSTFIXEXP T_dec {$$ = new AssignmentOperator($1,new SubtractionOperator($1,new NumberConstant(1)));}               ////////////////////////
                ;
@@ -346,7 +345,7 @@ ARGUMENT       : EXPRESSION T_rrb {$$ = new Parameter($1,nullptr);}
                | EXPRESSION T_comma ARGUMENT {$$ = new Parameter($1,$3);}
                ;
 
-PRIMARYEXP     : T_identifier           {$$ = new Variable($1); std::cout << "";}
+PRIMARYEXP     : T_identifier           {$$ = new Variable($1);}
                | CONSTANT               {$$ = $1;std::cout << "";}
                | T_stringliteral        {$$ = new StringConstant($1);}
                | T_lrb EXPRESSION T_rrb {$$ = $2;}
