@@ -260,9 +260,11 @@ StructDecleration::StructDecleration(std::string *structId, std::string *id, Sta
 }
 
 void StructDecleration::printASM(Bindings* bindings){
+    //std::cout << "adding struct " <<std::endl;
     Struct *structT = bindings->getStruct(structId);
     Decleration *decleration = new Decleration(structT,&id);
     bindings->addVariable(decleration);
+    //std::cout << "added struct " <<std::endl;
     if(nextStatement != nullptr){
         this->nextStatement->printASM(bindings);
     }

@@ -5,6 +5,7 @@
 #include <iostream>
 class Bindings;
 #include <math.h> 
+#include <typeinfo>
 
 
 
@@ -14,7 +15,20 @@ DotOperator::DotOperator(std::string *structId, std::string *elementId){
 }
 
 void DotOperator::printASM(Bindings *bindings){
-    ((Struct*)bindings->getVariable(structId))->placeElementOnStack(bindings,structId,elementId);
+    //((Struct*)bindings->getVariable(structId))->placeElementOnStack(bindings,structId,elementId);
+    int offset = bindings->elementPosition(structId,elementId);
+    Type *type = bindings->getElement(structId,elementId);
+    type->placeVariableOnStack(bindings,offset);
+}
+
+void DotOperator::printASMAssign(Bindings *bindings){
+    //take the value on the stack and place it in the 
+    //memory location given by the struct offset and the element offset
+    std::cout << "dot operator assign " <<std::endl;
+    int offset = bindings->elementPosition(structId,elementId);
+    Type *type = bindings->getElement(structId,elementId);
+    type->saveVariable(bindings,offset);
+    std::cout << "dot operator assign finished" <<std::endl;
 }
 
 Type* DotOperator::getType(Bindings* bindings){
@@ -32,7 +46,7 @@ void ArrowOperator::printASM(Bindings *bindings){
     //first place the memlocation on the stack
     //then find the offset and add that to the stack address
     //then dereference the value using the correct type and place that on the stack
-    ((Struct*)bindings->getVariable(pointerId))->placeElementOnStack(bindings,pointerId,elementId);
+ //   ((Struct*)bindings->getVariable(pointerId))->placeElementOnStack(bindings,pointerId,elementId);
 }
 
 Type* ArrowOperator::getType(Bindings* bindings){
@@ -197,6 +211,7 @@ void EqualityOperator::printASM(Bindings *bindings){
     std::string labelPass = bindings->createLabel("pass"); 
     Type* leftType = leftExpression->getType(bindings);
     Type* rightType = rightExpression->getType(bindings);
+
     leftExpression->printASM(bindings);
     bindings->setOffset(bindings->currentOffset() - 4);
     rightExpression->printASM(bindings);
@@ -204,6 +219,7 @@ void EqualityOperator::printASM(Bindings *bindings){
     bindings->setOffset(bindings->currentOffset() + 4);
     leftType->placeInRegister(bindings, RegisterType::leftReg);
     leftType->beq(bindings,RegisterType::leftReg, RegisterType::rightReg, labelPass);
+    std::cout << "nop" << std::endl;
     //std::cout << "beq   " << leftType->getRegister(RegisterType::leftReg) <<
     //    ", " << rightType->getRegister(RegisterType::rightReg) << labelPass <<std::endl;
     std::cout << "li    " << "$v0, 0" <<std::endl;
@@ -247,18 +263,18 @@ void LessThanEqualOperator::printASM(Bindings *bindings){
         <<"," << leftType->getRegister(RegisterType::leftReg) << "," <<
         rightType->getRegister(RegisterType::rightReg) <<std::endl;
     leftExpression->getType(bindings)->beq(bindings,RegisterType::evaluateReg,RegisterType::zeroReg,labelNext);
-    std::cout << "li   $v0,1, "<< labelEnd <<std::endl;
+    std::cout << "li   $v0,1"<<std::endl;
     std::cout << "j     " << labelEnd <<std::endl;
     std::cout << "nop " <<std::endl;
     std::cout << ".global " << labelNext << std::endl;
     std::cout << labelNext << ":" <<std::endl;    
-    leftExpression->getType(bindings)->beq(bindings,RegisterType::evaluateReg,RegisterType::zeroReg,labelPass);
-    std::cout << "li   $v0,0, "<< labelEnd <<std::endl;
+    leftExpression->getType(bindings)->beq(bindings,RegisterType::leftReg,RegisterType::rightReg,labelPass);
+    std::cout << "li   $v0,0"<<std::endl;
     std::cout << "j     " << labelEnd <<std::endl;
     std::cout << "nop " <<std::endl;
     std::cout << ".global " << labelPass <<std::endl;
     std::cout << labelPass << ":" <<std::endl;
-    std::cout << "li   $v0,1, "<< labelEnd <<std::endl;
+    std::cout << "li   $v0,1 " <<std::endl;
     std::cout << ".global " << labelEnd << std::endl;
     std::cout << labelEnd << ":" <<std::endl;    
     std::cout << "sw    $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
@@ -268,20 +284,30 @@ void AssignmentOperator::printASM(Bindings *bindings){
     //evaluate the expression
     //this will be different for pointer than it is for none pointer types
     rightExpression->printASM(bindings);
+    //std::cout << "added 0 " << typeid(*leftExpression).name() <<std::endl;
     if (dynamic_cast<DefreferenceOperator*>(leftExpression) != nullptr){
+        //std::cout << "added 1 " <<std::endl;
         //std::cout << "dereference assign --------" << std::endl;
         ((DefreferenceOperator*)leftExpression)->printASMAssign(bindings);
         //std::cout << "end dereference assign --------" << std::endl;
     }
     else if (dynamic_cast<IndexOperator*>(leftExpression) != nullptr)
     {
+        //std::cout << "added 2 " <<std::endl;
         ((IndexOperator*)leftExpression)->printASMAssign(bindings);
     }
+    else if (dynamic_cast<DotOperator*>(leftExpression) != nullptr)
+    {
+        //std::cout << "added 3 " <<std::endl;
+        ((DotOperator*)leftExpression)->printASMAssign(bindings);
+    }
     else{
+        //std::cout << "adding 4 " <<std::endl;
         //std::cout << "assign --------" << std::endl;
         leftExpression->getType(bindings)->saveVariable(bindings,((Variable*)leftExpression)->getName());
         //std::cout << "end assign --------" << std::endl;
     }
+    //std::cout << "added 5 " <<std::endl;
 }
 
 void AdditionOperator::printASM(Bindings *bindings){
@@ -299,7 +325,7 @@ void AdditionOperator::printASM(Bindings *bindings){
        if (dynamic_cast<Pointer*>(rightExpression->getType(bindings)) == nullptr){
             if (dynamic_cast<Char*>(((Pointer*)leftExpression->getType(bindings))->getType()) == nullptr){
                 int shift = log2(((Pointer*)leftExpression->getType(bindings))->getType()->getSize());
-                std::cout << "sll    " << reg << "," << reg << shift << std::endl;
+                std::cout << "sllv    " << reg << "," << reg << shift << std::endl;
             }
         } 
     }
@@ -389,26 +415,32 @@ void ModuloOperator::printASM(Bindings *bindings){
 
 void LogicalAndOperator::printASM(Bindings *bindings){
     //first evaluate left hand expression and place in register, the print asm places the value at the top of the stack
-    std::cout << leftExpression->getType(bindings)->getName() <<std::endl;
+    //std::cout << leftExpression->getType(bindings)->getName() <<std::endl;
     std::string endLabel = bindings->createLabel("end");
     std::string failLabel = bindings->createLabel("fail");
+
     Expression *zeroL = ((OperandType*)leftExpression->getType(bindings))->getZero();
     EqualityOperator* equalityOperator = new EqualityOperator(leftExpression,zeroL);
     equalityOperator->printASM(bindings);
-    std::cout << "lw    " << leftExpression->getType(bindings)->getRegister(RegisterType::evaluateReg)
+    Int *intT = new Int();
+    std::cout << "lw    " << intT->getRegister(RegisterType::evaluateReg)
         << ", " << bindings->currentOffset() << "($fp)" << std::endl;
-    leftExpression->getType(bindings)->beq(bindings,RegisterType::evaluateReg,RegisterType::zeroReg,failLabel);
+    std::cout << "li " << intT->getRegister(RegisterType::leftReg) << ",1"<<std::endl;
+    intT->beq(bindings,RegisterType::evaluateReg,RegisterType::leftReg,failLabel);
     std::cout << "nop" << std::endl;
     delete equalityOperator;
     delete zeroL;
+
     Expression *zeroR = ((OperandType*)rightExpression->getType(bindings))->getZero();
     equalityOperator = new EqualityOperator(rightExpression,zeroR);
     equalityOperator->printASM(bindings);
     delete equalityOperator;
     delete zeroR;
-    std::cout << "lw    " << leftExpression->getType(bindings)->getRegister(RegisterType::evaluateReg)
+    std::cout << "lw    " << intT->getRegister(RegisterType::evaluateReg)
         << ", " << bindings->currentOffset() << "($fp)" << std::endl;
-    leftExpression->getType(bindings)->beq(bindings,RegisterType::evaluateReg,RegisterType::zeroReg,failLabel);
+    std::cout << "li " << intT->getRegister(RegisterType::leftReg) << ",1"<<std::endl;
+    intT->beq(bindings,RegisterType::evaluateReg,RegisterType::leftReg,failLabel);
+    std::cout << "nop" << std::endl;
     std::cout << "li    $v0,1" << std::endl;
     std::cout << "sw    $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
     std::cout << "j   " << endLabel << std::endl;
@@ -419,30 +451,38 @@ void LogicalAndOperator::printASM(Bindings *bindings){
     std::cout << "sw    $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
     std::cout << ".global " << endLabel << std::endl;
     std::cout << endLabel << ":" << std::endl;
+    delete intT;
 }
 
 void LogicalOrOperator::printASM(Bindings *bindings){
     //first evaluate left hand expression and place in register, the print asm places the value at the top of the stack
     std::string endLabel = bindings->createLabel("end");
+    std::string nextLabel = bindings->createLabel("next");
     std::string failLabel = bindings->createLabel("fail");
     std::string passLabel = bindings->createLabel("pass");
-    FloatConstant *zero = new FloatConstant(0);
-    EqualityOperator* equalityOperator = new EqualityOperator(leftExpression,zero);
+    Expression *zeroL = ((OperandType*)leftExpression->getType(bindings))->getZero();
+    EqualityOperator* equalityOperator = new EqualityOperator(leftExpression,zeroL);
     equalityOperator->printASM(bindings);
-    std::cout << "lw    " << leftExpression->getType(bindings)->getRegister(RegisterType::evaluateReg)
+    Int *intT = new Int();
+    std::cout << "lw    " << intT->getRegister(RegisterType::evaluateReg)
         << ", " << bindings->currentOffset() << "($fp)" << std::endl;
-    leftExpression->getType(bindings)->beq(bindings,RegisterType::evaluateReg,RegisterType::zeroReg,failLabel);
+    std::cout << "li " << intT->getRegister(RegisterType::leftReg) << ",1"<<std::endl;
+    intT->beq(bindings,RegisterType::evaluateReg,RegisterType::leftReg,nextLabel);
     //std::cout << "beq   $v0,$zero, " << failLabel << std::endl;
     std::cout << "nop" << std::endl;
     std::cout << "j   " << passLabel << std::endl;
     std::cout << "nop" << std::endl;
+    std::cout << ".global " << nextLabel << std::endl;
+    std::cout << nextLabel << ":" << std::endl;
     delete equalityOperator;
-    equalityOperator = new EqualityOperator(rightExpression,zero);
+    Expression *zeroR = ((OperandType*)rightExpression->getType(bindings))->getZero();
+    equalityOperator = new EqualityOperator(rightExpression,zeroR);
     equalityOperator->printASM(bindings);
     delete equalityOperator;
-    std::cout << "lw    " << leftExpression->getType(bindings)->getRegister(RegisterType::evaluateReg)
+    std::cout << "lw    " << intT->getRegister(RegisterType::evaluateReg)
         << ", " << bindings->currentOffset() << "($fp)" << std::endl;
-    leftExpression->getType(bindings)->beq(bindings,RegisterType::evaluateReg,RegisterType::zeroReg,failLabel);
+    std::cout << "li " << intT->getRegister(RegisterType::leftReg) << ",1"<<std::endl;
+    intT->beq(bindings,RegisterType::evaluateReg,RegisterType::leftReg,failLabel);
     std::cout << "nop" << std::endl;
     std::cout << ".global " << passLabel << std::endl;
     std::cout << passLabel << ":" << std::endl;

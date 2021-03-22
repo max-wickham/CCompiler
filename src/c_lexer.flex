@@ -40,7 +40,7 @@ ALL .
 (signed)	{ return T_signed; }
 (unsigned)	{ return T_unsigned; }
 (enum)	{ return T_enum; }
-(struct)	{ return T_struct; }
+(struct)	{ std::cout << ""; return T_struct;  std::cout << "";}
 
    /* storage classes */ 
    /*(auto)      {return T_auto;}*/

@@ -28,6 +28,7 @@ void Top::printASM(){
         // for(StructEntry entry: structDef->elements){
         //     size += entry.type->getSize();
         // }
+        //std::cout << "adding struct top  " << structDef->id << std::endl;
         bindings->addStruct(structDef->id,structDef);
     }
 

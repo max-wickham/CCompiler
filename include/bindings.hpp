@@ -43,11 +43,13 @@ class Bindings{
     void setOffset(int offset);
     int currentOffset();
     int stackPosition(std::string id);
+    int elementPosition(std::string structId, std::string elementId);
     void addVariable(Decleration *decleration);
     void addFunction(std::string id, Type *type);
     void addStruct(std::string id, StructDefinition *structDefinition);
     Type* getFunction(std::string id);
     Type* getVariable(std::string id);
+    Type* getElement(std::string structId, std::string elementId);
     //TODO
     Struct* getStruct(std::string id);
     void setBreak(std::string label);

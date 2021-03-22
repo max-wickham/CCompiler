@@ -6,6 +6,7 @@ class Bindings;
 #include "type.hpp"
 class Parameter;
 
+
 class Expression: public Node{
     public:
     virtual ~Expression(){};
@@ -13,17 +14,18 @@ class Expression: public Node{
     virtual Type*  getType(Bindings *bindings) = 0;
 };
 
-class DotOperator: public Node{
+class DotOperator: public Expression{
     protected:
     std::string structId;
     std::string elementId;
     public:
     DotOperator(std::string *structId, std::string *elementId);
-    void printASM(Bindings *bindings);
-    Type* getType(Bindings* bindings);
+    void printASM(Bindings *bindings) override;
+    void printASMAssign(Bindings *bindings);
+    Type* getType(Bindings* bindings) override;
 };
 
-class ArrowOperator: public Node{
+class ArrowOperator: public Expression{
     protected:
     std::string pointerId;
     std::string elementId;

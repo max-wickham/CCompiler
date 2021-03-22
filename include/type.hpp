@@ -62,7 +62,11 @@ public:
 
 	virtual void saveVariable(Bindings *bindings, std::string id) = 0;
 
+	virtual void saveVariable(Bindings *bindings, int offset) = 0;
+
 	virtual void placeVariableOnStack(Bindings *bindings, std::string id) = 0;
+
+	virtual void placeVariableOnStack(Bindings *bindings, int offset) = 0;
 
 	virtual void placeVariableOnStack(Bindings *bindings) = 0;
 
@@ -101,6 +105,7 @@ class Struct : public Type {
 	std::string getRegister(RegisterType type);
 
 	void saveVariable(Bindings *bindings, std::string id);
+	void saveVariable(Bindings *bindings, int offset){}
 	//TODO
 	void placeVariableOnStack(Bindings *bindings, std::string id);
 	//TODO
@@ -109,6 +114,8 @@ class Struct : public Type {
 	Type *getElementType(Bindings *bindings, std::string id, std::string elementId);
 	//TODO
 	void placeVariableOnStack(Bindings *bindings);
+
+	void placeVariableOnStack(Bindings *bindings, int offset){}
 
 	void beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::string label);
 };
@@ -141,10 +148,13 @@ class Void : public Type {
 	std::string getRegister(RegisterType type) override;
 
 	void saveVariable(Bindings *bindings, std::string id) override{}
+	void saveVariable(Bindings *bindings, int offset){}
 
 	void placeVariableOnStack(Bindings *bindings, std::string id) override{}
 
 	void placeVariableOnStack(Bindings *bindings) override{}
+
+	void placeVariableOnStack(Bindings *bindings, int offset){}
 
 	void beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::string label) override{}
 };
@@ -221,7 +231,11 @@ public:
 
 	void saveVariable(Bindings *bindings, std::string id) override;
 
+	void saveVariable(Bindings *bindings, int offset);
+
 	void placeVariableOnStack(Bindings *bindings, std::string id) override;
+
+	void placeVariableOnStack(Bindings *bindings, int offset);
 
 	void placeVariableOnStack(Bindings *bindings) override;
 
@@ -256,7 +270,11 @@ public:
 	
 	void saveVariable(Bindings *bindings, std::string id);
 
+	void saveVariable(Bindings *bindings, int offset);
+
 	void placeVariableOnStack(Bindings *bindings, std::string id);
+
+	void placeVariableOnStack(Bindings *bindings, int offset);
 
 	void placeVariableOnStack(Bindings *bindings);
 };
@@ -310,9 +328,13 @@ public:
 
 	void saveVariable(Bindings *bindings, std::string id) override;
 
+	void saveVariable(Bindings *bindings, int offset);
+
 	void placeVariableOnStack(Bindings *bindings, std::string id) override;
 
 	void placeVariableOnStack(Bindings *bindings) override;
+
+	void placeVariableOnStack(Bindings *bindings, int offset);
 
 	std::string getAdditionOperator() override;
 
@@ -359,9 +381,13 @@ public:
 
 	void saveVariable(Bindings *bindings, std::string id) override;
 
+	void saveVariable(Bindings *bindings, int offset);
+
 	void placeVariableOnStack(Bindings *bindings, std::string id) override;
 
 	void placeVariableOnStack(Bindings *bindings) override;
+
+	void placeVariableOnStack(Bindings *bindings, int offset);
 
 	std::string getAdditionOperator() override;
 

@@ -93,9 +93,7 @@ void yyerror(const char *);
 
 %type <enumEntry> ENUMENTRY
 
-%type <structDef> STRUCTDEFINITION
-
-%type <structEntry> STRUCTENTRY
+%type <structDef> STRUCTDEFINITION STRUCTDEFINITIONFINAL
 
 %start ROOT
                         
@@ -109,24 +107,18 @@ TOP  : FUNCTION {$$ = new Top(); $$->addFunction($1);}
      | FUNCTIONDEFINITION {$$ = new Top(); $$->addFunctionDefinition($1);}
      | GLOBALVARIABLE {$$ = new Top(); $$->addGlobal((VariableDefinition*)$1);}
      | ENUM           {$$ = new Top(); $$->addEnum($1);}
-     | STRUCTDEFINITION {$$ = new Top(); $$->addStruct($1);}
+     | STRUCTDEFINITIONFINAL {$$ = new Top(); $$->addStruct($1); std::cout << "";}
      | TOP FUNCTION {$$ = $1; $$->addFunction($2);}    
      | TOP FUNCTIONDEFINITION {$$ = $1; $$->addFunctionDefinition($2);}    
      | TOP GLOBALVARIABLE {$$ = $1; $$->addGlobal((VariableDefinition*)$2);}
      | TOP ENUM           {$$ = $1; $$->addEnum($2);}
-     | TOP STRUCTDEFINITION {$$ = $1; $$->addStruct($2);}
+     | TOP STRUCTDEFINITIONFINAL {$$ = $1; $$->addStruct($2); std::cout << "";}
      ;
 
 GLOBALVARIABLE : TYPE T_identifier T_sc  {$$ = new VariableDefinition(new Decleration($1,$2),nullptr);}
                | TYPE T_identifier T_equal EXPRESSION T_sc {$$ = new VariableDefinition(new Decleration($1,$2,$4),nullptr);std::cout << "";}
                | TYPE T_identifier T_lsb T_int_const T_rsb T_sc {$$ = new VariableDefinition(new Decleration(new Array($1,$4),$2),nullptr);}      
                ;
-
-STRUCTDEFINITION    : T_struct T_identifier T_lcb {$$ = new StructDefinition($2);}
-                    | STRUCTDEFINITION TYPE T_identifier T_sc {$$ = $1; $1->elements.push_back(new StructEntry($2,$3));}
-                    | STRUCTDEFINITION T_rcb T_sc {$$ = $1;}
-                    ;
-
 
 
 ENUM           : T_enum T_identifier T_lcb ENUMENTRY T_sc {$$ = new Enum($2,$4);std::cout << "";}
@@ -137,6 +129,14 @@ ENUMENTRY      : T_identifier T_rcb   { $$ = new EnumEntry($1, nullptr);std::cou
                | T_identifier T_comma ENUMENTRY { $$ = new EnumEntry($1, $3);}
                | T_identifier T_equal T_int_const T_comma ENUMENTRY { $$ = new EnumEntry($1,$3, $5);}
                ;
+
+
+
+STRUCTDEFINITIONFINAL : STRUCTDEFINITION T_rcb T_sc {$$ = $1; std::cout << "";}
+
+STRUCTDEFINITION    : T_struct T_identifier T_lcb {$$ = new StructDefinition($2); std::cout << "";}
+                    | STRUCTDEFINITION TYPE T_identifier T_sc {$$ = $1; $1->elements.push_back(new StructEntry($2,$3));}
+                    ;
 
     
 FUNCTION : TYPE T_identifier PARAMETER STATEMENT {$$ = new Function(new Decleration($1,$2),$4,$3);}
@@ -176,6 +176,7 @@ STATEMENT : ITERATIONSTATEMENT  {$$ = $1;}
           | CONTINUESTATEMENT   {$$ = $1;}
           | SWITCHSTATEMENT     {$$ = $1;}
           | CASESTATEMENT       {$$ = $1;}
+          | STRUCTDECLERATIONSTATEMENT {$$ = $1;}
           ;
 
 BREAKSTATEMENT      : T_break T_sc STATEMENT {$$ = new BreakStatement($3);}
@@ -204,7 +205,7 @@ VARIABLEDEFINITIONSTATEMENT : TYPE T_identifier T_sc STATEMENT                  
                             | TYPE T_identifier T_lsb T_int_const T_rsb T_sc STATEMENT {$$ = new VariableDefinition(new Decleration(new Array($1,$4),$2),$7);}      
                             ;
 
-STRUCTDECLERATIONSTATEMENT  : T_struct T_identifier T_identifier T_sc STATEMENT {$$ = new StructDecleration($2,$3,$5);}
+STRUCTDECLERATIONSTATEMENT  : T_struct T_identifier T_identifier T_sc STATEMENT {$$ = new StructDecleration($2,$3,$5); std::cout << "";}
                             ;
 
 SWITCHSTATEMENT             : T_switch T_lrb EXPRESSION T_rrb T_lcb CASESTATEMENT STATEMENT { $$ = new SwitchStatement($3,$6,$7);}
@@ -222,7 +223,7 @@ EXPRESSION : ASSIGNEXPRESSION {$$ = $1;}
 ASSIGNEXPRESSION : CONDEXP {$$ = $1;}
            | UNARYEXP ASSIGN_OP ASSIGNEXPRESSION {  
              if(*$2 == "="){
-               $$ = new AssignmentOperator($1,$3);std::cout <<  "";
+               $$ = new AssignmentOperator($1,$3);std::cout <<  ""; if($1==nullptr){std::cout <<  "";}
              }
              else if(*$2 == "+="){
                {$$ = new AssignmentOperator($1,new AdditionOperator($1,$3));}
@@ -256,7 +257,7 @@ ASSIGNEXPRESSION : CONDEXP {$$ = $1;}
              }
            }
 
-ASSIGN_OP   :	T_assignment_op {$$ = $1 ;}
+ASSIGN_OP   :	T_assignment_op {$$ = $1 ; }
 	          |	T_equal { $$ = $1 ; std::cout <<  "";}
 	          ;
 
@@ -267,7 +268,7 @@ CONDEXP    : LOGICALOREXP {$$ = $1;}
   /* here we add the precdents of ops */
 
 LOGICALOREXP  : LOGICALANDEXP {$$ = $1 ;}
-              | LOGICALOREXP T_logical_or LOGICALANDEXP {$$ = new LogicalAndOperator($1,$3) ;}
+              | LOGICALOREXP T_logical_or LOGICALANDEXP {$$ = new LogicalOrOperator($1,$3) ;}
               ;
 
 LOGICALANDEXP : INCLUSIVEOREXP {$$ = $1 ;}
@@ -335,7 +336,7 @@ DEREFERENCEEXPRESSION : POSTFIXEXP {$$ = $1;}
 
 POSTFIXEXP     : PRIMARYEXP { $$ = $1; }
                | POSTFIXEXP T_lsb EXPRESSION T_rsb {$$ = new IndexOperator($1,$3);} ////////////////////////
-               | T_identifier T_dot T_identifier { new DotOperator($1,$3);}     ////////////////////////
+               | T_identifier T_dot T_identifier { new DotOperator($1,$3); std::cout << "dot operator";}     ////////////////////////
                | T_identifier T_arrow T_identifier { new ArrowOperator($1,$3);}        ////////////////////////
                | POSTFIXEXP T_inc {$$ = new AssignmentOperator($1,new AdditionOperator($1,new NumberConstant(1)));}               ////////////////////////
                | POSTFIXEXP T_dec {$$ = new AssignmentOperator($1,new SubtractionOperator($1,new NumberConstant(1)));}               ////////////////////////
@@ -346,7 +347,7 @@ ARGUMENT       : EXPRESSION T_rrb {$$ = new Parameter($1,nullptr);}
                ;
 
 PRIMARYEXP     : T_identifier           {$$ = new Variable($1); std::cout << "";}
-               | CONSTANT               {$$ = $1;}
+               | CONSTANT               {$$ = $1;std::cout << "";}
                | T_stringliteral        {$$ = new StringConstant($1);}
                | T_lrb EXPRESSION T_rrb {$$ = $2;}
                ;

@@ -21,6 +21,7 @@ Bindings* Bindings::createGlobalBindings(){
     Bindings *newBindings = new Bindings();
     std::list<std::map<std::string, BindingData>>::iterator it;
     newBindings->bindings = bindings;
+    newBindings->structs = structs;
     newBindings->current_offset = this->current_offset;
     newBindings->functions = functions;
     //std::cout << newBindings->functions << std::endl;
@@ -56,6 +57,12 @@ int Bindings::stackPosition(std::string id){
     return 0;
 }
 
+int Bindings::elementPosition(std::string structId, std::string elementId){
+    int structOffset = this->stackPosition(structId);
+    int elementOffset = structs.at(structId).elements.at(elementId).offset;
+    return structOffset + elementOffset;
+}
+
 void Bindings::addVariable(Decleration *decleration){
     BindingData data;
     data.type = decleration->type;
@@ -87,6 +94,7 @@ void Bindings::addStruct(std::string id, StructDefinition *structDefinition){
     Struct *structT = new Struct(totaloffset * -1,&id);
     bindingsStruct.structT = structT;  
     structs[structDefinition->id] = bindingsStruct;
+    //std::cout << "added struct bindings" <<std::endl;
 }
 
 Type* Bindings::getFunction(std::string id){
@@ -103,6 +111,10 @@ Type* Bindings::getVariable(std::string id){
     }
     //std::cout << "got variable " << std::endl;
     return 0;
+}
+
+Type* Bindings::getElement(std::string structId, std::string elementId){
+    Type *type = structs.at(structId).elements.at(elementId).type;
 }
 
 Struct* Bindings::getStruct(std::string id){

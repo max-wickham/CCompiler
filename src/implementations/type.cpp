@@ -52,9 +52,6 @@ std::string Struct::getRegister(RegisterType type){return "";}
 void Struct::saveVariable(Bindings *bindings, std::string id){}
 
 void Struct::placeVariableOnStack(Bindings *bindings, std::string id){}
-
-//TODO
-void Struct::placeElementOnStack(Bindings *bindings, std::string id, std::string elementId){}
 //TODO
 Type* Struct::getElementType(Bindings *bindings, std::string id, std::string elementId){}
 //TODO
@@ -74,25 +71,25 @@ std::string Void::getRegister(RegisterType type){return "$zero";}
 
 //integral type
 std::string IntegralType::getAdditionOperator(){
-    return "add";
+    return "add ";
 }
 
 std::string IntegralType::getSubtractionOperator(){
-    return "sub";
+    return "sub ";
 }
 
 std::string IntegralType::getMultiplicationOperator(){
     if(_signed){
-        return "multu";
+        return "multu ";
     }
-    return "mult";
+    return "mult ";
 }
 
 std::string IntegralType::getDivisionOperator(){
     if(_signed){
-        return "div";
+        return "divu ";
     }
-    return "divu";
+    return "div ";
 }
 
 void IntegralType::extractFromMultRegister(Bindings *bindings){
@@ -231,9 +228,22 @@ void Int::saveVariable(Bindings *bindings, std::string id){
         << bindings->stackPosition(id) << "($fp)" << std::endl;
 }
 
+void Int::saveVariable(Bindings *bindings, int offset){
+    std::cout << "lw    " << this->getRegister(RegisterType::evaluateReg) << ","
+        << bindings->currentOffset() << "($fp)" << std::endl;
+    std::cout << "sw    " << this->getRegister(RegisterType::evaluateReg) << ","
+        << offset << "($fp)" << std::endl;
+}
+
 void Int::placeVariableOnStack(Bindings *bindings, std::string id){
     std::cout << "lw    " << this->getRegister(RegisterType::evaluateReg)
         << "," << bindings->stackPosition(id) << "($fp)" << std::endl;
+    this->extractFromRegister(bindings,RegisterType::evaluateReg);
+}
+
+void Int::placeVariableOnStack(Bindings *bindings, int offset){
+    std::cout << "lw    " << this->getRegister(RegisterType::evaluateReg)
+        << "," << offset << "($fp)" << std::endl;
     this->extractFromRegister(bindings,RegisterType::evaluateReg);
 }
 
@@ -391,9 +401,23 @@ void Char::saveVariable(Bindings *bindings, std::string id) {
         << bindings->stackPosition(id) << "($fp)" << std::endl;
 }
 //-> check this is 
+void Char::saveVariable(Bindings *bindings, int offset){
+    std::cout << "lb    " << this->getRegister(RegisterType::evaluateReg) << ","
+        << bindings->currentOffset() << "($fp)" << std::endl;
+    std::cout << "sb    " << this->getRegister(RegisterType::evaluateReg) << ","
+        << offset << "($fp)" << std::endl;
+}
+
+
 void Char::placeVariableOnStack(Bindings *bindings, std::string id) {
     std::cout << "lb    " << this->getRegister(RegisterType::evaluateReg)
         << "," << bindings->stackPosition(id) << "($fp)" << std::endl;
+    this->extractFromRegister(bindings,RegisterType::evaluateReg);
+}
+
+void Char::placeVariableOnStack(Bindings *bindings, int offset){
+    std::cout << "lb    " << this->getRegister(RegisterType::evaluateReg)
+        << "," << offset << "($fp)" << std::endl;
     this->extractFromRegister(bindings,RegisterType::evaluateReg);
 }
 //-> check this is correct
@@ -547,6 +571,13 @@ void Float::saveVariable(Bindings *bindings, std::string id){
     std::cout << "s.s    " << this->getRegister(RegisterType::evaluateReg) << ","
         << bindings->stackPosition(id) << "($fp)" << std::endl;
 }
+
+void Float::saveVariable(Bindings *bindings, int offset){
+    std::cout << "l.s    " << this->getRegister(RegisterType::evaluateReg) << ","
+        << bindings->currentOffset() << "($fp)" << std::endl;
+    std::cout << "s.s    " << this->getRegister(RegisterType::evaluateReg) << ","
+        << offset << "($fp)" << std::endl;
+}
 //-> check this is correct
 void Float::placeVariableOnStack(Bindings *bindings, std::string id){
     std::cout << "l.s    " << this->getRegister(RegisterType::evaluateReg)
@@ -564,6 +595,12 @@ void Float::placeVariableOnStack(Bindings *bindings){
     //put the value in the evaluate register onto the stack
     std::cout << "s.s    " << this->getRegister(RegisterType::evaluateReg)
         << "," << bindings->currentOffset() << "($fp)" << std::endl;
+    this->extractFromRegister(bindings,RegisterType::evaluateReg);
+}
+
+void Float::placeVariableOnStack(Bindings *bindings, int offset){
+    std::cout << "l.s    " << this->getRegister(RegisterType::evaluateReg)
+        << "," << offset << "($fp)" << std::endl;
     this->extractFromRegister(bindings,RegisterType::evaluateReg);
 }
 //-> check this is correct
@@ -740,9 +777,24 @@ void Double::saveVariable(Bindings *bindings, std::string id){
         << bindings->stackPosition(id) << "($fp)" << std::endl;
 }
 //----check
+void Double::saveVariable(Bindings *bindings, int offset){
+    std::cout << "l.d    " << this->getRegister(RegisterType::evaluateReg) << ","
+        << bindings->currentOffset() << "($fp)" << std::endl;
+    std::cout <<"nop" <<std::endl;
+    std::cout << "s.d    " << this->getRegister(RegisterType::evaluateReg) << ","
+        << offset << "($fp)" << std::endl;
+}
+
 void Double::placeVariableOnStack(Bindings *bindings, std::string id){
     std::cout << "l.d    " << this->getRegister(RegisterType::evaluateReg)
         << "," << bindings->stackPosition(id) << "($fp)" << std::endl;
+    std::cout <<"nop" <<std::endl;
+    this->extractFromRegister(bindings,RegisterType::evaluateReg);
+}
+
+void Double::placeVariableOnStack(Bindings *bindings, int offset){
+    std::cout << "l.d    " << this->getRegister(RegisterType::evaluateReg)
+        << "," << offset << "($fp)" << std::endl;
     std::cout <<"nop" <<std::endl;
     this->extractFromRegister(bindings,RegisterType::evaluateReg);
 }
