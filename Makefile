@@ -10,6 +10,8 @@ HPPFILES = $(wildcard include/*.hpp)
 CPPFILES = $(wildcard src/implementations/*.cpp) $(wildcard src/*.cpp)
 OBJS = $(patsubst %.cpp,%.o,$(CPPFILES))
 
+bin/c_compiler : $(LINK_TARGET)
+
 all : $(LINK_TARGET)
 
 $(LINK_TARGET) : src/c_lexer.yy.o src/c_parser.tab.o $(OBJS) 
