@@ -33,23 +33,24 @@ Type* DotOperator::getType(Bindings* bindings){
     return ((Struct*)bindings->getVariable(structId))->getElementType(bindings,structId,elementId);
     //return new Int();
 }
-// ArrowOperator::ArrowOperator(std::string *pointerId, std::string *elementId){
-//     this->pointerId = *pointerId;
-//     this->elementId = *elementId;
-// }
 
-// void ArrowOperator::printASM(Bindings *bindings){
-//     //do something different dependent on whether the left hand operator is a struct or a arrow operator or a dot operator
-//     //if a struct
-//     //first place the memlocation on the stack
-//     //then find the offset and add that to the stack address
-//     //then dereference the value using the correct type and place that on the stack
-//  //   ((Struct*)bindings->getVariable(pointerId))->placeElementOnStack(bindings,pointerId,elementId);
-// }
+ArrowOperator::ArrowOperator(std::string *pointerId, std::string *elementId){
+    this->pointerId = *pointerId;
+    this->elementId = *elementId;
+}
 
-// Type* ArrowOperator::getType(Bindings* bindings){
-//     ((Struct*)bindings->getVariable(pointerId))->getElementType(bindings,pointerId,elementId);
-// }
+void ArrowOperator::printASM(Bindings *bindings){
+    //place the offset the stack
+    ((Pointer*)bindings->getVariable(pointerId))->placeVariableOnStack(bindings);
+    //int offset = bindings->elementPosition(structId,elementId);
+    std::string structId = ((Struct*)((Pointer*)bindings->getVariable(pointerId))->getType())->getName();
+    Type *type = bindings->getElement(structId,elementId);
+    type->placeVariableOnStack(bindings);
+}
+
+Type* ArrowOperator::getType(Bindings* bindings){
+    ((Struct*)bindings->getVariable(pointerId))->getElementType(bindings,pointerId,elementId);
+}
 
 UnaryOperatorExpression::UnaryOperatorExpression(Expression *expression){
     this->expression = expression;
@@ -244,6 +245,10 @@ void EqualityOperator::printASM(Bindings *bindings){
     std::cout << "sw    $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
 }
 
+Type* EqualityOperator::getType(Bindings *bindings){
+    return new Int();
+}
+
 void LessThanOperator::printASM(Bindings *bindings){
     Type* leftType = leftExpression->getType(bindings);
     Type* rightType = rightExpression->getType(bindings);
@@ -253,9 +258,14 @@ void LessThanOperator::printASM(Bindings *bindings){
     rightExpression->getType(bindings)->placeInRegister(bindings, RegisterType::rightReg);
     bindings->setOffset(bindings->currentOffset() + leftExpression->getType(bindings)->getSize());
     leftExpression->getType(bindings)->placeInRegister(bindings, RegisterType::leftReg);
-    std::cout << "slt    $v0," << leftType->getRegister(RegisterType::leftReg) << "," <<
-        rightType->getRegister(RegisterType::rightReg) <<std::endl;
-    std::cout << "sw    $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
+    ((OperandType*)leftType)->slt(bindings,RegisterType::leftReg,RegisterType::rightReg);
+    //std::cout << "slt    $v0," << leftType->getRegister(RegisterType::leftReg) << "," <<
+    //    rightType->getRegister(RegisterType::rightReg) <<std::endl;
+    //std::cout << "sw    $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
+}
+
+Type* LessThanOperator::getType(Bindings *bindings){
+    return new Int();
 }
 
 void LessThanEqualOperator::printASM(Bindings *bindings){
@@ -270,15 +280,24 @@ void LessThanEqualOperator::printASM(Bindings *bindings){
     rightExpression->getType(bindings)->placeInRegister(bindings, RegisterType::rightReg);
     bindings->setOffset(bindings->currentOffset() + leftExpression->getType(bindings)->getSize());
     leftExpression->getType(bindings)->placeInRegister(bindings, RegisterType::leftReg);
-    std::cout << "slt    " << leftType->getRegister(RegisterType::evaluateReg)
-        <<"," << leftType->getRegister(RegisterType::leftReg) << "," <<
-        rightType->getRegister(RegisterType::rightReg) <<std::endl;
-    leftExpression->getType(bindings)->beq(bindings,RegisterType::evaluateReg,RegisterType::zeroReg,labelNext);
+    //std::cout << "slt    " << leftType->getRegister(RegisterType::evaluateReg)
+    //    <<"," << leftType->getRegister(RegisterType::leftReg) << "," <<
+    //    rightType->getRegister(RegisterType::rightReg) <<std::endl;
+    Int *intT = new Int();
+    ((OperandType*)leftType)->slt(bindings,RegisterType::leftReg,RegisterType::rightReg);
+    intT->placeInRegister(bindings,RegisterType::evaluateReg);
+    intT->beq(bindings,RegisterType::evaluateReg,RegisterType::zeroReg,labelNext);
     std::cout << "li   $v0,1"<<std::endl;
     std::cout << "j     " << labelEnd <<std::endl;
     std::cout << "nop " <<std::endl;
     std::cout << ".global " << labelNext << std::endl;
-    std::cout << labelNext << ":" <<std::endl;    
+    std::cout << labelNext << ":" <<std::endl;
+    leftExpression->printASM(bindings);
+    bindings->setOffset(bindings->currentOffset() - leftExpression->getType(bindings)->getSize());
+    rightExpression->printASM(bindings);
+    rightExpression->getType(bindings)->placeInRegister(bindings, RegisterType::rightReg);
+    bindings->setOffset(bindings->currentOffset() + leftExpression->getType(bindings)->getSize());
+    leftExpression->getType(bindings)->placeInRegister(bindings, RegisterType::leftReg);    
     leftExpression->getType(bindings)->beq(bindings,RegisterType::leftReg,RegisterType::rightReg,labelPass);
     std::cout << "li   $v0,0"<<std::endl;
     std::cout << "j     " << labelEnd <<std::endl;
@@ -289,6 +308,10 @@ void LessThanEqualOperator::printASM(Bindings *bindings){
     std::cout << ".global " << labelEnd << std::endl;
     std::cout << labelEnd << ":" <<std::endl;    
     std::cout << "sw    $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
+}
+
+Type* LessThanEqualOperator::getType(Bindings *bindings){
+    return new Int();
 }
 
 void AssignmentOperator::printASM(Bindings *bindings){
@@ -580,9 +603,11 @@ void ShiftLeftOperator::printASM(Bindings *bindings){
     std::cout << "sllv  " << type->getRegister(RegisterType::evaluateReg) <<
     ", " << type->getRegister(RegisterType::leftReg) << ", " <<  type->getRegister(RegisterType::rightReg)
     << std::endl;
+    type->extractFromRegister(bindings,RegisterType::evaluateReg);
 }
 
 void ShiftRightOperator::printASM(Bindings *bindings){
+    //std::cout << "hello " <<std::endl;
     Type *type = leftExpression->getType(bindings);
     leftExpression->printASM(bindings);
     bindings->setOffset(bindings->currentOffset() - leftExpression->getType(bindings)->getSize());
@@ -590,7 +615,7 @@ void ShiftRightOperator::printASM(Bindings *bindings){
     rightExpression->getType(bindings)->placeInRegister(bindings, RegisterType::rightReg);
     bindings->setOffset(bindings->currentOffset() + leftExpression->getType(bindings)->getSize());
     leftExpression->getType(bindings)->placeInRegister(bindings, RegisterType::leftReg);
-    if(type->isSigned() == false){
+    if(type->isSigned() == true){
         std::cout << "srav  " << type->getRegister(RegisterType::evaluateReg) <<
         ", " << type->getRegister(RegisterType::leftReg) << ", " <<  type->getRegister(RegisterType::rightReg)
         << std::endl;
@@ -599,6 +624,7 @@ void ShiftRightOperator::printASM(Bindings *bindings){
         ", " << type->getRegister(RegisterType::leftReg) <<  ", " << type->getRegister(RegisterType::rightReg)
         << std::endl;
     }
+    type->extractFromRegister(bindings,RegisterType::evaluateReg);
 }
 
 void BitwiseNotOperator::printASM(Bindings *bindings){

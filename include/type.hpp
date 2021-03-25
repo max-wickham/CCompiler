@@ -174,6 +174,8 @@ public:
 	//TODO
 	virtual void extractFromDivRegister(Bindings *bindings) = 0;
 
+	virtual void slt(Bindings* bindings, RegisterType reg1, RegisterType reg2) = 0;
+
 	virtual Expression* getZero() = 0;
 };
 
@@ -200,6 +202,8 @@ public:
 	void extractFromModuloRegister(Bindings *bindings);
 	//TODO
 	void beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::string label) override;
+
+	void slt(Bindings* bindings, RegisterType reg1, RegisterType reg2) override;
 
 	Expression* getZero();
 };
@@ -350,6 +354,8 @@ public:
 	//TODO
 	void beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::string label);
 
+	void slt(Bindings* bindings,RegisterType reg1, RegisterType reg2);
+
 	Expression* getZero();
 };
 
@@ -402,6 +408,8 @@ public:
 	void extractFromDivRegister(Bindings *bindings) override;
 	//TODO
 	void beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::string label);
+
+	void slt(Bindings* bindings,RegisterType reg1, RegisterType reg2);
 
 	Expression* getZero();
 };

@@ -1,0 +1,13 @@
+#!/bin/bash
+make 
+
+parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+
+while getopts 'S:o:' flag; do
+  case "${flag}" in
+    o) fileout="${OPTARG}" ;;
+    S) filein="${OPTARG}" ;;
+  esac
+done
+
+${parent_path}/scope.o < ${filein} | ${parent_path}/c_compiler_program > ${fileout} 
