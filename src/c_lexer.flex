@@ -42,17 +42,15 @@ ALL .
 (enum)	{ return T_enum; }
 (struct)	{ std::cout << ""; return T_struct;  std::cout << "";}
 
-   /* storage classes */ 
-   /*(auto)      {return T_auto;}*/
+
 
 (typedef)   { return T_typedef; }
 
    /* Type qualifiers */
- /*(const)     {return T_const;}*/
+ 
  /*control flow statements */
 (continue)	{ return T_continue; }
 (break)		{ return T_break; }
-(goto)		{ return T_goto; }
 (default)	{  std::cout << ""; return T_default;}
 (switch)	   { return T_switch; }
 (case)		{ return T_case; }

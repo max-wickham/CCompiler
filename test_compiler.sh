@@ -20,8 +20,7 @@ for i in compiler_tests/*; do
         
 
         #Skips driver . c files
-        if [ ${j} == *"driver.c" ]; then
-        echo "working"
+        if [[ ${j} == *"driver.c" ]]; then
             continue;
         fi
 
