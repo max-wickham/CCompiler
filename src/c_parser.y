@@ -49,11 +49,11 @@ void yyerror(const char *);
  /*https://www.lysator.liu.se/c/ANSI-C-grammar-y.html USEFUL ! */
 
       T_identifier T_sc T_comma T_lrb T_lcb T_rcb T_lsb T_rsb T_qm T_colon T_logical_or
-			T_logical_and T_or T_xor T_and T_logical_equality T_logical_inequality T_greaterthanequal_op T_lessthanequal_op T_greaterthan_op T_lessthan_op T_shift T_mult T_div
+			T_logical_and T_or T_xor T_and T_logical_equality T_logical_inequality T_greaterthanequal_op T_lessthanequal_op T_greaterthan_op T_lessthan_op  T_mult T_div
 			T_rem T_tilde T_not T_dot T_arrow T_inc T_dec T_add T_sub T_assignment_op T_equal
 			T_sizeof T_int_const T_scope T_if T_while T_do T_for T_return		
 			T_void T_char T_short T_int T_long T_float T_double T_signed T_unsigned
-			T_typedef T_static 
+			T_typedef T_static T_shift_right T_shift_left
 			T_volatile T_goto T_break T_continue
 			T_case T_default T_switch T_ellipsis T_stringliteral T_float_const T_double_constant T_enum T_struct
 			
@@ -79,7 +79,7 @@ void yyerror(const char *);
 
 %type	<string>	T_identifier ASSIGN_OP T_assignment_op T_equal T_and T_add T_sub T_tilde T_not
 			          T_mult T_div T_rem T_logical_equality T_logical_inequality T_greaterthanequal_op 
-                T_lessthanequal_op T_greaterthan_op T_lessthan_op T_shift T_inc T_dec T_stringliteral  
+                T_lessthanequal_op T_greaterthan_op T_lessthan_op T_inc T_dec T_stringliteral  
                 T_rsb T_lsb T_rrb T_lrb T_sizeof T_logical_and  T_logical_or T_qm T_colon T_sc T_long  
                 T_typedef T_double  T_short T_void T_const T_float_const T_double_constant
 
@@ -299,7 +299,8 @@ RELATIONALEXP  : SHIFTEXP {$$ = $1 ;}
                ;
 
 SHIFTEXP       : ADDEXP {$$ = $1 ;}
-               | SHIFTEXP T_shift ADDEXP {} /////////////////////////
+               | SHIFTEXP T_shift_right SHIFTEXP {$$ = new ShiftRightOperator($1,$3);} /////////////////////////
+               | SHIFTEXP T_shift_left SHIFTEXP {$$ = new ShiftLeftOperator($1,$3);} 
                ;
                 
 ADDEXP         : MULTEXP {$$ = $1 ; std::cout << "";}

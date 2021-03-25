@@ -25,15 +25,16 @@ class DotOperator: public Expression{
     Type* getType(Bindings* bindings) override;
 };
 
-// class ArrowOperator: public Expression{
-//     protected:
-//     std::string pointerId;
-//     std::string elementId;
-//     public:
-//     ArrowOperator(std::string *pointerId, std::string *elementId);
-//     void printASM(Bindings *bindings);
-//     Type* getType(Bindings* bindings);
-// };
+class ArrowOperator: public Expression{
+    protected:
+    std::string pointerId;
+    std::string elementId;
+    public:
+    ArrowOperator(std::string *pointerId, std::string *elementId);
+    void printASM(Bindings *bindings);
+    void printASMAssign(Bindings *bindings);
+    Type* getType(Bindings* bindings);
+};
 
 
 class FunctionCall: public Expression{
@@ -154,18 +155,21 @@ class EqualityOperator: public BinaryOperatorExpression{
     public:
     using BinaryOperatorExpression::BinaryOperatorExpression;
     void printASM(Bindings *bindings);
+    Type* getType(Bindings *bindings) override;
 };
 
 class LessThanOperator: public BinaryOperatorExpression{
     public:
     using BinaryOperatorExpression::BinaryOperatorExpression;
     void printASM(Bindings *bindings);
+    Type* getType(Bindings *bindings) override;
 };
 
 class LessThanEqualOperator: public BinaryOperatorExpression{
     public:
     using BinaryOperatorExpression::BinaryOperatorExpression;
     void printASM(Bindings *bindings);
+    Type* getType(Bindings *bindings) override;
 };
 
 class ModuloOperator: public BinaryOperatorExpression{

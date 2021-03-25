@@ -14,7 +14,7 @@ ASSIGNMENT_OPERATOR (([<>][<>]|[*\/%+\-&^|])[=])
 INTEGERSUFFIX ([uU][lL]|[lL][uU]|[uUlL])
                                     /* defines the suffixes which indicates the type of a literal , u or U = unsigned , l or L = long . etc : https://en.cppreference.com/w/cpp/language/integer_literal */
 DECIMALCONSTANT ([1-9][0-9]*)
-FLOATCONSTANT ([1-9]*[0-9].[0-9]*)
+FLOATCONSTANT ([1-9]*[0-9]\.[0-9]*)
 OCTALCONSTANT     ([0][0-7]*)
 HEXCONSTANT     ([0][xX][0-9A-Fa-f]+)
                                     /* Numerical constants simples.  */
@@ -92,7 +92,8 @@ ALL .
 [<][=]    { yylval.string = new std::string(yytext); return T_lessthanequal_op; }
 [>]     { yylval.string = new std::string(yytext); return T_greaterthan_op; }
 [<]     { yylval.string = new std::string(yytext); return T_lessthan_op; }
-[<|>][<|>]	{ yylval.string = new std::string(yytext); return T_shift; }
+[>][>]      {return T_shift_right;}
+[<][<]      {return T_shift_left;}
 [*] 		{ yylval.string = new std::string(yytext); return T_mult; }
 [\/]		{ yylval.string = new std::string(yytext); return T_div; }
 [%]		{ yylval.string = new std::string(yytext); return T_rem; }
@@ -120,8 +121,9 @@ sizeof		{ return T_sizeof; }
 {IDENTIFIER}	                        { yylval.string = new std::string(yytext); std::cout << ""; return T_identifier;}
 
 (({HEXCONSTANT}|{OCTALCONSTANT})|({DECIMALCONSTANT})){INTEGERSUFFIX}?     { yylval.number = strtol(yytext, NULL, 0); return T_int_const; }
-({FLOATCONSTANT}f)                                                        { yylval.string = new std::string(yytext); return T_float_const;}
-({FLOATCONSTANT}d)                                                        { yylval.string = new std::string(yytext); return T_double_constant;}
+({FLOATCONSTANT})(f|F)                                                    { yylval.string = new std::string(yytext); return T_float_const;}
+({FLOATCONSTANT})(d|D)                                                    { yylval.string = new std::string(yytext); return T_double_constant;}
+({FLOATCONSTANT})                                                         { yylval.string = new std::string(yytext); *yylval.string += "l"; return T_double_constant;}
 
 {WHITESPACE}		{ ; }
 

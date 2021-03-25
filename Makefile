@@ -1,4 +1,4 @@
-LINK_TARGET = bin/c_compiler
+LINK_TARGET = bin/c_compiler_program
 CC = g++
 
 CPPFLAGS += -std=c++17 -W -Wall -g #-Wno-unused-parameter
@@ -25,7 +25,6 @@ src/c_parser.tab.cpp src/c_parser.tab.hpp: src/c_parser.y
 	yacc -v -d src/c_parser.y -o src/c_parser.tab.cpp
 	mkdir -p bin;
 
-
 makeobj:
 	$(CC) $(CPPFLAGS) src/$(CPPALLTEST) -o bin/testout
 
@@ -38,7 +37,6 @@ bin/compiler: src/c_compiler.output
 	
 .PHONY: clean
 clean :
-	rm -rf bin/*
 	rm -f src/*.tab.hpp
 	rm -f src/*.tab.cpp
 	rm -f src/*.yy.cpp
