@@ -8,4 +8,4 @@ while getopts 'S:o:' flag; do
   esac  
 done
 
-${parent_path}/scope.o < ${filein} | ${parent_path}/c_compiler_program > ${fileout} 
+python3 ${parent_path}/typedef.py < ${filein} | ${parent_path}/scope.o | ${parent_path}/c_compiler_program > ${fileout} 

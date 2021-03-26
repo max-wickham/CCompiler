@@ -11,7 +11,7 @@ fi
 PASSED=0
 FAILED=0
 
-for j in compiler_tests/added_tests_sam/*; do
+for j in compiler_tests/misc/*; do
     #for j in ${i}/*; do 
     
 
@@ -27,7 +27,7 @@ for j in compiler_tests/added_tests_sam/*; do
         echo "==========================="
         echo "Input file : ${j}"
         #pipe  = [./scope.o < ${j}]
-        ./scope.o < ${j} | ./bin/c_compiler_program > bin/test_program.s 
+        python3 ./bin/typedef.py < ${j} | ./bin/scope.o | ./bin/c_compiler_program > bin/test_program.s 
         #./bin/c_compiler < ./scope.o < ${j} > bin/test_program.s 
         mips-linux-gnu-gcc -mfp32 -o bin/test_program.o -c bin/test_program.s
         mips-linux-gnu-gcc -mfp32 -static -o bin/test_program bin/test_program.o ${nj}_driver.c

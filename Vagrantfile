@@ -50,6 +50,15 @@ Vagrant.configure(2) do |config|
 
       # QEMU run-time emulator
       sudo apt-get -y install qemu
+      
+      #python
+      sudo apt-get -y isntall python3
 
+      #pip
+      sudo apt-get -y isntall pip
+
+      #regex
+      pip install regex
+      
    SHELL
 end
