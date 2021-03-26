@@ -72,7 +72,7 @@ void yyerror(const char *);
 %type<parameterDefinition> PARAMETER
 
 %type <expression> EXPRESSION CONSTANT PRIMARYEXP POSTFIXEXP UNARYEXP MULTEXP ADDEXP 
-                   SHIFTEXP EQUALITYEXP RELATIONALEXP ANDEXP  EXCLUSIVEOREXP 
+                   SHIFTEXP EQUALITYEXP RELATIONALEXP ANDEXP  EXCLUSIVEOREXP  INEQUALITYEXPRESSION
                    INCLUSIVEOREXP LOGICALANDEXP LOGICALOREXP CONDEXP ASSIGNEXPRESSION DEREFERENCEEXPRESSION
 
 %type <parameter> ARGUMENT
@@ -287,9 +287,13 @@ ANDEXP         : EQUALITYEXP {$$ = $1 ;}
                | ANDEXP T_and EQUALITYEXP { $$ = new BitwiseAndOperator($1,$3) ;}
                ;
 
-EQUALITYEXP    : RELATIONALEXP {$$ = $1 ;}
+EQUALITYEXP    : INEQUALITYEXPRESSION {$$ = $1 ;}
                | EQUALITYEXP T_logical_equality RELATIONALEXP { $$ = new EqualityOperator($1,$3) ;}
                ;
+
+INEQUALITYEXPRESSION    : RELATIONALEXP {$$ = $1 ;}
+                        | INEQUALITYEXPRESSION T_logical_inequality INEQUALITYEXPRESSION { $$ = new NotOperator(new EqualityOperator($1,$3));}
+                        ;
 
 RELATIONALEXP  : SHIFTEXP {$$ = $1 ;}
                | RELATIONALEXP T_lessthan_op SHIFTEXP         {$$ = new LessThanOperator($1,$3);}

@@ -648,13 +648,13 @@ void Float::beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::s
     std::string reg1String;
     std::string reg2String;
     if(reg1 == RegisterType::zeroReg){
-        std::cout << "li.d $f0, 0" << std::endl;
+        std::cout << "li.f $f0, 0" << std::endl;
         reg1String = "$f0";
     }else{
         reg1String = this->getRegister(reg1);
     }
     if(reg2 == RegisterType::zeroReg){
-        std::cout << "li.d $f0, 0" << std::endl;
+        std::cout << "li.f $f0, 0" << std::endl;
         reg2String = "$f0";
     }else{
         reg2String = this->getRegister(reg2);
@@ -871,13 +871,13 @@ void Double::beq(Bindings *bindings, RegisterType reg1, RegisterType reg2, std::
     std::string reg1String;
     std::string reg2String;
     if(reg1 == RegisterType::zeroReg){
-        std::cout << "li.d $f0, 0" << std::endl;
+        std::cout << "ldc1 $f0, 0" << std::endl;
         reg1String = "$f0";
     }else{
         reg1String = this->getRegister(reg1);
     }
     if(reg2 == RegisterType::zeroReg){
-        std::cout << "li.d $f0, 0" << std::endl;
+        std::cout << "ldc1 $f0, 0" << std::endl;
         reg2String = "$f0";
     }else{
         reg2String = this->getRegister(reg2);

@@ -13,6 +13,7 @@ for line in sys.stdin:
 types = ["int",
         "unsigned int",
         "long int",
+        "long unsigned int",
         "long",
         "char",
         "unsigned char",

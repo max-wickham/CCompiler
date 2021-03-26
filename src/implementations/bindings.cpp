@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include "type.hpp"
-#include "decleration.hpp"
+#include "decleration.hpp" 
 #include "bindings.hpp"
 
 Bindings::Bindings(){
@@ -111,7 +111,7 @@ Type* Bindings::getVariable(std::string id){
         if(it->find(id) != it->end()){
             return it->at(id).type;
         }
-    }
+    }  
     //std::cout << "got variable " << std::endl;
     return 0;
 }

@@ -172,7 +172,7 @@ DoubleConstant::DoubleConstant(double value){
 
 void DoubleConstant::printASM(Bindings *bindings) {
     std::cout << "li.d $f4," << value << std::endl;
-    std::cout << "s.d    $f4, " << bindings->currentOffset() << "($fp)" << std::endl;
+    std::cout << "sdc1    $f4, " << bindings->currentOffset() << "($fp)" << std::endl;
 }
 
 Type*  DoubleConstant::getType(Bindings *bindings){
@@ -206,7 +206,7 @@ void NumberConstant::printASM(Bindings *bindings){
     // else{
     //     int upper = (value & 4294901760) >> 16;
     //     int lower = (value & 65535);
-    //     std::cout << "move    $v0,$zero" << std::endl;
+    //     std::cout << "move    $v0,$zero" << std::endl;4
     //     std::cout << "lui    $v0," << upper << std::endl;
     //     std::cout << "addi    $v0," << lower << std::endl;
     //     std::cout << "sw    $v0, " << bindings->currentOffset() << "($fp)" << std::endl;
@@ -225,10 +225,10 @@ void EqualityOperator::printASM(Bindings *bindings){
     Type* rightType = rightExpression->getType(bindings);
 
     leftExpression->printASM(bindings);
-    bindings->setOffset(bindings->currentOffset() - 4);
+    bindings->setOffset(bindings->currentOffset() - leftExpression->getType(bindings)->getSize());
     rightExpression->printASM(bindings);
     rightType->placeInRegister(bindings, RegisterType::rightReg);
-    bindings->setOffset(bindings->currentOffset() + 4);
+    bindings->setOffset(bindings->currentOffset() + leftExpression->getType(bindings)->getSize());
     leftType->placeInRegister(bindings, RegisterType::leftReg);
     leftType->beq(bindings,RegisterType::leftReg, RegisterType::rightReg, labelPass);
     std::cout << "nop" << std::endl;

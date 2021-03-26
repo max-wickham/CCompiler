@@ -120,7 +120,7 @@ sizeof		{ return T_sizeof; }
 
 (({HEXCONSTANT}|{OCTALCONSTANT})|({DECIMALCONSTANT})){INTEGERSUFFIX}?     { yylval.number = strtol(yytext, NULL, 0); return T_int_const; }
 ({FLOATCONSTANT})(f|F)                                                    { yylval.string = new std::string(yytext); return T_float_const;}
-({FLOATCONSTANT})(d|D)                                                    { yylval.string = new std::string(yytext); return T_double_constant;}
+({FLOATCONSTANT})(l|L)                                                    { yylval.string = new std::string(yytext); return T_double_constant;}
 ({FLOATCONSTANT})                                                         { yylval.string = new std::string(yytext); *yylval.string += "l"; return T_double_constant;}
 
 {WHITESPACE}		{ ; }

@@ -11,7 +11,7 @@ fi
 PASSED=0
 FAILED=0
 
-for j in compiler_tests/misc/*; do
+for j in compiler_tests/added_tests_sam/*; do
     #for j in ${i}/*; do 
     
 
