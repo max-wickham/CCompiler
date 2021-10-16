@@ -38,8 +38,3 @@ Changelog
 
 Doombar comments
 =========
-
-inspiration for the AST was taken from : 
-https://www.lysator.liu.se/c/ANSI-C-grammar-y.html
-
-We used TOP, as 
